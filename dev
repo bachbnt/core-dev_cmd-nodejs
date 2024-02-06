@@ -4,9 +4,9 @@ const { Command } = require('commander');
 const program = new Command();
 
 program
-  .arguments('<command> <projectName>')
+  .arguments('<command> [projectName]')
   .action((command, projectName, options) => {
-    const commands = {
+    const frameworks = {
       flutter: `flutter create ${projectName}`,
       react: `npx create-next-app@latest ${projectName}`,
       react_native: `npx react-native@latest init ${projectName}`,
@@ -17,8 +17,25 @@ program
       nest: `nest new ${projectName}`,
     };
 
+    const devices = {
+      android: 'emulator -avd Pixel_7_Pro_API_33',
+      ios: "open -a Simulator && xcrun simctl boot 'iPhone 15 Pro'",
+    };
+
+    const commands = {
+      ...frameworks,
+      ...devices,
+    };
+
     if (!(command in commands)) {
       console.error(`Error: Unsupported command "${command}".`);
+      process.exit(1);
+    }
+
+    if (!projectName && command in frameworks) {
+      console.error(
+        `Error: "projectName" is required for command "${command}".`
+      );
       process.exit(1);
     }
 
@@ -29,14 +46,14 @@ program
 
     childProcess.on('exit', (code) => {
       if (code === 0) {
-        console.log('Command was successful!');
+        console.log(`Command "${command}" was successful!`);
       } else {
-        console.error(`Command exited with code ${code}`);
+        console.error(`Error: Command "${command}" exited with code ${code}.`);
       }
     });
 
     childProcess.on('error', (error) => {
-      console.error(`Error: ${error.message}`);
+      console.error(`Error: ${error.message}.`);
       process.exit(1);
     });
   });

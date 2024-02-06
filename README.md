@@ -20,4 +20,4 @@ Update Zprofile
 
 Run The Script
 
-### `dev <command> <projectName>`
+### `dev <command> [projectName]`
