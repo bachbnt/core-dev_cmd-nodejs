@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+const { spawn } = require('child_process');
+const { Command } = require('commander');
+const program = new Command();
+
+program
+  .arguments('<command> <projectName>')
+  .action((command, projectName, options) => {
+    const commands = {
+      flutter: `flutter create ${projectName}`,
+      react: `npx create-next-app@latest ${projectName}`,
+      react_native: `npx react-native@latest init ${projectName}`,
+      next: `npx nuxi@latest init ${projectName}`,
+      vue: `npm create vue@latest ${projectName}`,
+      nuxt: `npx nuxi@latest init ${projectName}`,
+      express: `npx express-generator-typescript ${projectName}`,
+      nest: `nest new ${projectName}`,
+    };
+
+    if (!(command in commands)) {
+      console.error(`Error: Unsupported command "${command}".`);
+      process.exit(1);
+    }
+
+    const childProcess = spawn(commands[command], {
+      shell: true,
+      stdio: 'inherit',
+    });
+
+    childProcess.on('exit', (code) => {
+      if (code === 0) {
+        console.log('Command was successful!');
+      } else {
+        console.error(`Command exited with code ${code}`);
+      }
+    });
+
+    childProcess.on('error', (error) => {
+      console.error(`Error: ${error.message}`);
+      process.exit(1);
+    });
+  });
+
+program.parse(process.argv);
