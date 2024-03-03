@@ -3,50 +3,75 @@ const { spawn } = require('child_process');
 const { Command } = require('commander');
 const program = new Command();
 
+const DEFAULT_DEVICES = {
+  android: 'Pixel_7_Pro_API_33',
+  ios: 'iPhone 15 Pro',
+};
+
+const frameworks = {
+  flutter: 'flutter create ${project_name}',
+  react: 'npx create-next-app@latest ${project-name}',
+  react_native: 'npx react-native@latest init ${ProjectName}',
+  next: 'npx nuxi@latest init ${project-name}',
+  vue: 'npm create vue@latest ${project-name}',
+  nuxt: 'npx nuxi@latest init ${project-name}',
+  express: 'npx express-generator-typescript ${project-name}',
+  nest: 'nest new ${project-name}',
+};
+
+const devices = {
+  android: 'emulator -avd ${Device_Name}',
+  ios: "open -a Simulator && xcrun simctl boot '${Device Name}'",
+};
+
+const commands = {
+  ...frameworks,
+  ...devices,
+};
+
 program
   .arguments('<command> [projectName]')
-  .action((command, projectName, options) => {
-    const frameworks = {
-      flutter: `flutter create ${projectName}`,
-      react: `npx create-next-app@latest ${projectName}`,
-      react_native: `npx react-native@latest init ${projectName}`,
-      next: `npx nuxi@latest init ${projectName}`,
-      vue: `npm create vue@latest ${projectName}`,
-      nuxt: `npx nuxi@latest init ${projectName}`,
-      express: `npx express-generator-typescript ${projectName}`,
-      nest: `nest new ${projectName}`,
-    };
-
-    const devices = {
-      android: 'emulator -avd Pixel_7_Pro_API_33',
-      ios: "open -a Simulator && xcrun simctl boot 'iPhone 15 Pro'",
-    };
-
-    const commands = {
-      ...frameworks,
-      ...devices,
-    };
-
-    if (!(command in commands)) {
-      console.error(`Error: Unsupported command "${command}".`);
+  .action((command, target, options) => {
+    if (['info', 'help'].includes(command)) {
+      console.info('Supported commands:');
+      Object.entries(commands).forEach(([key, value]) => {
+        console.info(`${key}: ${value}`);
+      });
       process.exit(1);
     }
 
-    if (!projectName && command in frameworks) {
+    if (!(command in commands)) {
+      console.error(`Error: Unsupported command ${command}.`);
+      process.exit(1);
+    }
+
+    let _target = target;
+
+    if (command in frameworks && !_target) {
       console.error(
-        `Error: "projectName" is required for command "${command}".`
+        `Error: Project name is required for command "${command}".`
       );
       process.exit(1);
     }
 
-    const childProcess = spawn(commands[command], {
-      shell: true,
-      stdio: 'inherit',
-    });
+    if (command in devices && !_target) {
+      _target = DEFAULT_DEVICES[command];
+      console.info(
+        `Device name is set to "${DEFAULT_DEVICES[command]}" for command "${command}".`
+      );
+    }
+
+    const childProcess = spawn(
+      commands[command].replace(/\$\{(.*?)\}/g, _target),
+      {
+        shell: true,
+        stdio: 'inherit',
+      }
+    );
 
     childProcess.on('exit', (code) => {
       if (code === 0) {
-        console.log(`Command "${command}" was successful!`);
+        console.info(`Command "${command}" was successful!`);
       } else {
         console.error(`Error: Command "${command}" exited with code ${code}.`);
       }
