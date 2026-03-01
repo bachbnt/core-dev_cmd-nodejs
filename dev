@@ -1,86 +1,208 @@
 #!/usr/bin/env node
-const { spawn } = require('child_process');
-const { Command } = require('commander');
-const program = new Command();
+
+const { spawn, execSync } = require('child_process');
 
 const DEFAULT_DEVICES = {
-  android: 'Pixel_7_Pro_API_33',
-  ios: 'iPhone 15 Pro',
+  android: 'Pixel_9_Pro_Fold',
+  ios: 'iPhone 17 Pro',
 };
 
 const frameworks = {
-  flutter: 'flutter create ${project_name}',
-  react: 'npx create-next-app@latest ${project-name}',
-  react_native: 'npx react-native@latest init ${ProjectName}',
-  next: 'npx nuxi@latest init ${project-name}',
-  vue: 'npm create vue@latest ${project-name}',
-  nuxt: 'npx nuxi@latest init ${project-name}',
-  express: 'npx express-generator-typescript ${project-name}',
-  nest: 'nest new ${project-name}',
+  flutter: 'flutter create ${target}',
+  react: 'npx create-next-app@latest ${target}',
+  react_native: 'npx react-native@latest init ${target}',
+  next: 'npx create-next-app@latest ${target}',
+  vue: 'npm create vue@latest ${target}',
+  express: 'npx express-generator-typescript ${target}',
+  nest: 'nest new ${target}',
 };
 
 const devices = {
-  android: 'emulator -avd ${Device_Name}',
-  ios: "open -a Simulator && xcrun simctl boot '${Device Name}'",
+  android: 'emulator -avd ${target}',
+  ios: "open -a Simulator && xcrun simctl boot '${target}'",
 };
 
-const commands = {
-  ...frameworks,
-  ...devices,
-};
+const commands = { ...frameworks, ...devices };
 
-program
-  .arguments('<command> [projectName]')
-  .action((command, target, options) => {
-    if (['info', 'help'].includes(command)) {
-      console.info('Supported commands:');
-      Object.entries(commands).forEach(([key, value]) => {
-        console.info(`${key}: ${value}`);
-      });
-      process.exit(1);
-    }
+// Helpers to dynamically fetch devices
+function getAndroidDevices() {
+  try {
+    const output = execSync('emulator -list-avds', {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    });
+    return output
+      .split('\n')
+      .map((d) => d.trim())
+      .filter(Boolean);
+  } catch (err) {
+    return [];
+  }
+}
 
-    if (!(command in commands)) {
-      console.error(`Error: Unsupported command ${command}.`);
-      process.exit(1);
-    }
-
-    let _target = target;
-
-    if (command in frameworks && !_target) {
-      console.error(
-        `Error: Project name is required for command "${command}".`
-      );
-      process.exit(1);
-    }
-
-    if (command in devices && !_target) {
-      _target = DEFAULT_DEVICES[command];
-      console.info(
-        `Device name is set to "${DEFAULT_DEVICES[command]}" for command "${command}".`
-      );
-    }
-
-    const childProcess = spawn(
-      commands[command].replace(/\$\{(.*?)\}/g, _target),
-      {
-        shell: true,
-        stdio: 'inherit',
+function getIOSDevices() {
+  try {
+    const output = execSync('xcrun simctl list devices available -j', {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    });
+    const data = JSON.parse(output);
+    const devicesList = [];
+    if (data && data.devices) {
+      for (const runtime in data.devices) {
+        data.devices[runtime].forEach((device) => {
+          if (device.isAvailable && device.name) {
+            devicesList.push(device.name);
+          }
+        });
       }
+    }
+    return [...new Set(devicesList)]; // return unique names
+  } catch (err) {
+    return [];
+  }
+}
+
+async function main() {
+  const p = await import('@clack/prompts');
+  const pc = (await import('picocolors')).default;
+  const command = process.argv[2];
+
+  // Helper text
+  if (!command || command === 'help' || command === '-h' || command === '--help') {
+    console.log(`\n${pc.bgCyan(pc.black(' DEV CLI v2.0.0'))} ${pc.bold('Development Environment Setup by Bach Bui')}\n`);
+    console.log(`${pc.bold('Usage:')}`);
+    console.log(`  dev <command>\n`);
+    
+    console.log(`${pc.bold('Available Frameworks:')}`);
+    Object.keys(frameworks).forEach((cmd) => {
+      console.log(`  ${pc.green(cmd.padEnd(14))} ${pc.dim(frameworks[cmd].replace('${target}', '<project-name>'))}`);
+    });
+    
+    console.log(`\n${pc.bold('Available Devices:')}`);
+    Object.keys(devices).forEach((cmd) => {
+      console.log(`  ${pc.blue(cmd.padEnd(14))} ${pc.dim(devices[cmd].replace('${target}', '<device-name>'))}`);
+    });
+    console.log('');
+    process.exit(command ? 0 : 1);
+  }
+
+  if (command === 'info') {
+    p.intro(pc.inverse(' INFO '));
+    p.note(
+      Object.entries(commands)
+        .map(([k, v]) => `${pc.bold(k)}: ${pc.dim(v)}`)
+        .join('\n'),
+      'Supported Commands'
     );
+    p.outro('Learn more by running: dev help');
+    process.exit(0);
+  }
 
-    childProcess.on('exit', (code) => {
-      if (code === 0) {
-        console.info(`Command "${command}" was successful!`);
-      } else {
-        console.error(`Error: Command "${command}" exited with code ${code}.`);
+  if (!commands[command]) {
+    p.intro(pc.bgRed(pc.white(' ERROR ')));
+    p.log.error(`Unsupported command: ${pc.bold(command)}`);
+    p.outro(`Run ${pc.cyan('dev help')} to see available commands.`);
+    process.exit(1);
+  }
+
+  p.intro(`${pc.bgCyan(pc.black(' DEV CLI '))} ${pc.bold(command)}`);
+
+  let target = '';
+
+  // Prompt for project name if it's a framework
+  if (command in frameworks) {
+    const result = await p.text({
+      message: 'What is your project name?',
+      placeholder: 'my-awesome-app',
+      validate(value) {
+        if (!value) return 'Project name is required!';
+        if (value.includes(' ')) return 'Project name cannot contain spaces!';
+      },
+    });
+
+    if (p.isCancel(result)) {
+      p.cancel('Operation cancelled.');
+      process.exit(0);
+    }
+    target = result;
+  }
+
+  // Prompt using dynamic list if it's a device
+  if (command in devices) {
+    let availableDevices = [];
+    let initialValue = DEFAULT_DEVICES[command];
+
+    const s = p.spinner();
+    s.start('Fetching available devices...');
+
+    if (command === 'android') {
+      availableDevices = getAndroidDevices();
+    } else if (command === 'ios') {
+      availableDevices = getIOSDevices();
+    }
+    s.stop('Devices loaded.');
+
+    if (availableDevices.length > 0) {
+      if (!availableDevices.includes(initialValue)) {
+        initialValue = availableDevices[0];
       }
-    });
 
-    childProcess.on('error', (error) => {
-      console.error(`Error: ${error.message}.`);
-      process.exit(1);
-    });
+      const result = await p.select({
+        message: 'Select a device to boot:',
+        options: availableDevices.map((d) => ({
+          value: d,
+          label: d,
+          hint: d === initialValue ? 'default' : '',
+        })),
+        initialValue,
+      });
+
+      if (p.isCancel(result)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+      target = result;
+    } else {
+      // Fallback if no devices detected via CLI dynamically
+      const result = await p.text({
+        message: 'No available devices detected automatically. Please type the device name:',
+        placeholder: initialValue,
+        defaultValue: initialValue,
+        validate(value) {
+          if (!value) return 'Device name is required!';
+        }
+      });
+
+      if (p.isCancel(result)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+      target = result;
+    }
+  }
+
+  const finalCommand = commands[command].replace(/\$\{target\}/g, target);
+
+  p.log.step(`Executing: ${pc.yellow(finalCommand)}`);
+
+  const childProcess = spawn(finalCommand, {
+    shell: true,
+    stdio: 'inherit',
   });
 
-program.parse(process.argv);
+  childProcess.on('exit', (code) => {
+    if (code === 0) {
+      p.outro(`${pc.green('✔')} Command "${command}" was successful!`);
+    } else {
+      p.outro(`${pc.red('✖')} Command "${command}" exited with code ${code}.`);
+    }
+  });
+
+  childProcess.on('error', (error) => {
+    p.outro(`${pc.red('✖')} Error: ${error.message}`);
+    process.exit(1);
+  });
+}
+
+main().catch(console.error);
