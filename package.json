@@ -1,16 +1,28 @@
 {
-  "name": "dev-cmd",
-  "version": "2.0.0",
-  "description": "",
+  "name": "devcmd",
+  "version": "2.1.0",
+  "description": "DevCmd project scaffolding and simulator management CLI",
   "bin": {
     "dev": "./dev"
   },
+  "files": [
+    "dev",
+    "src"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "setup": "./scripts/setup-dev.sh",
+    "test": "node --test"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "cli",
+    "scaffolding",
+    "development"
+  ],
+  "author": "bachbnt",
   "license": "ISC",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "dependencies": {
     "@clack/prompts": "^1.0.1",
     "picocolors": "^1.1.1"
