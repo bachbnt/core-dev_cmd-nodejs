@@ -51,14 +51,19 @@ function withGit(commands, target, enabled) {
   return enabled ? [...commands, createCommand('git', ['-C', target, 'init'])] : commands;
 }
 
-function buildPythonCommands(framework, target, git) {
+function buildPythonCommands(framework, target, options) {
   const generator = path.join(__dirname, '..', 'generators', 'python-project.js');
+  const git = options.git !== false;
+  const pythonExecutable = options.python || PYTHON_EXECUTABLE;
   const projectPython = path.join(target, VENV_PYTHON);
-  const commands = [
-    createCommand('node', [generator, framework, target]),
-    createCommand(PYTHON_EXECUTABLE, ['-m', 'venv', path.join(target, '.venv')]),
-    createCommand(projectPython, ['-m', 'pip', 'install', '-e', `${target}[dev]`]),
-  ];
+  const commands = [createCommand('node', [generator, framework, target])];
+
+  if (options.noInstall) return withGit(commands, target, git);
+
+  commands.push(
+    createCommand(pythonExecutable, ['-m', 'venv', path.join(target, '.venv')]),
+    createCommand(projectPython, ['-m', 'pip', 'install', '-e', `${target}[dev]`])
+  );
 
   if (framework === 'django') {
     commands.push(
@@ -82,7 +87,9 @@ function buildFrameworkCommands(command, target, options = {}) {
   const eslint = options.eslint !== false;
 
   if (command === 'flutter') {
-    return withGit([createCommand('flutter', ['create', target])], target, git);
+    const args = ['create', target];
+    if (options.noInstall) args.push('--no-pub');
+    return withGit([createCommand('flutter', args)], target, git);
   }
 
   if (command === 'react') {
@@ -96,8 +103,10 @@ function buildFrameworkCommands(command, target, options = {}) {
 
   if (command === 'react_native') {
     const template = typescript ? 'default' : 'blank';
+    const args = ['--template', template, '--yes'];
+    if (options.noInstall) args.push('--no-install');
     return withGit(
-      [packageCommand(packageManager, 'expo', target, ['--template', template, '--yes'])],
+      [packageCommand(packageManager, 'expo', target, args)],
       target,
       git
     );
@@ -106,6 +115,7 @@ function buildFrameworkCommands(command, target, options = {}) {
   if (command === 'react_native_bare') {
     const args = ['@react-native-community/cli@latest', 'init', target, '--pm', packageManager];
     if (!git) args.push('--skip-git-init');
+    if (options.noInstall) args.push('--skip-install');
     return [createCommand('npx', args)];
   }
 
@@ -116,6 +126,7 @@ function buildFrameworkCommands(command, target, options = {}) {
       `--use-${packageManager}`,
     ];
     if (!git) args.push('--disable-git');
+    if (options.noInstall) args.push('--skip-install');
     args.push('--yes');
     return [packageCommand(packageManager, 'next', target, args)];
   }
@@ -129,6 +140,7 @@ function buildFrameworkCommands(command, target, options = {}) {
       '--gitInit=false',
       '--modules=',
     ];
+    if (options.noInstall) args.push('--no-install');
     return withGit([packageCommand(packageManager, 'nuxt', target, args)], target, git);
   }
 
@@ -159,18 +171,37 @@ function buildFrameworkCommands(command, target, options = {}) {
       typescript ? 'TypeScript' : 'JavaScript',
     ];
     if (!git) args.push('--skip-git');
+    if (options.noInstall) args.push('--skip-install');
     return [createCommand('npx', args)];
   }
 
   if (['django', 'fastapi', 'flask'].includes(command)) {
-    return buildPythonCommands(command, target, git);
+    return buildPythonCommands(command, target, options);
   }
 
   throw new Error(`Unsupported framework: ${command}`);
 }
 
+function getFrameworkRequirements(command, options = {}) {
+  const requirements = ['node'];
+  const packageManager = options.packageManager || 'npm';
+
+  if (command === 'flutter') requirements.push('flutter');
+  else if (['react', 'next', 'nuxt', 'vue', 'react_native'].includes(command)) {
+    requirements.push(packageManager === 'npm' ? (command === 'next' || command === 'react_native' ? 'npx' : 'npm') : packageManager);
+  } else if (['react_native_bare', 'express', 'nest'].includes(command)) {
+    requirements.push('npx');
+  } else if (['django', 'fastapi', 'flask'].includes(command) && !options.noInstall) {
+    requirements.push(options.python || PYTHON_EXECUTABLE);
+  }
+
+  if (options.git !== false) requirements.push('git');
+  return requirements;
+}
+
 module.exports = {
   buildFrameworkCommands,
   buildPythonCommands,
+  getFrameworkRequirements,
   packageCommand,
 };

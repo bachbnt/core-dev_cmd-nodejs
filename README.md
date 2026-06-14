@@ -1,6 +1,6 @@
 # DevCmd
 
-DevCmd is an interactive development CLI for scaffolding projects and managing Android emulators and iOS simulators.
+DevCmd is an interactive development CLI for scaffolding projects, detecting existing projects, running common lifecycle tasks, and managing Android emulators and iOS simulators.
 
 ## Features
 
@@ -11,6 +11,12 @@ DevCmd is an interactive development CLI for scaffolding projects and managing A
 - Inspect device runtime and boot status.
 - Cold boot Android emulators and shut down all iOS simulators.
 - View command history and repeat the latest successful command.
+- Detect Node.js, Python, Flutter, Android, and iOS projects from any child directory.
+- Use consistent `install`, `run`, `test`, `build`, `clean`, and `open` commands.
+- Inspect detected projects and their resolved lifecycle commands before execution.
+- Run framework-aware quality checks with one `dev check` command.
+- Check the local toolchain with `dev doctor`.
+- Store defaults and recently used projects under `~/.devcmd`.
 
 ## Requirements
 
@@ -21,26 +27,48 @@ DevCmd is an interactive development CLI for scaffolding projects and managing A
 
 ## Installation
 
+Install directly from GitHub without cloning the repository:
+
 ```bash
-npm install
-chmod +x dev
-npm link
+npm install --global github:bachbnt/dev-cmd
 ```
 
-Or run the reusable setup script:
+Verify the installation:
 
 ```bash
+dev help
+# or
+devcmd help
+```
+
+Run the same install command again to update to the latest commit on the default branch. To uninstall DevCmd:
+
+```bash
+npm uninstall --global devcmd
+```
+
+When using NVM, global npm packages belong to the active Node.js version. Install DevCmd once for each Node.js version where you want to use it.
+
+### Local development
+
+Clone the repository, then run the reusable setup script:
+
+```bash
+git clone https://github.com/bachbnt/dev-cmd.git
+cd dev-cmd
 ./scripts/setup-dev.sh
 # or
 npm run setup
 ```
 
-The setup creates an npm symlink from the active Node.js installation to this repository. Run it once; later source changes are used automatically the next time `dev` runs, without `source ~/.zshrc` or relinking. When switching to a different Node.js version with NVM, run the setup script once for that Node.js version.
+The setup installs dependencies and creates an npm symlink from the active Node.js installation to the local repository. Run it once; later source changes are used automatically the next time `dev` runs, without `source ~/.zshrc` or relinking.
 
 ## Usage
 
 ```bash
 dev <command> [target] [options]
+# or
+devcmd <command> [target] [options]
 ```
 
 Interactive project creation:
@@ -65,6 +93,19 @@ Preview without executing:
 
 ```bash
 dev flutter demo --dry-run
+```
+
+Check installed development tools:
+
+```bash
+dev doctor
+```
+
+Inspect the current project without executing anything:
+
+```bash
+dev inspect
+dev inspect ../my-project
 ```
 
 ## Framework Commands
@@ -104,6 +145,63 @@ dev react_native mobile-app --typescript --pnpm
 dev react_native_bare NativeApp --bun
 ```
 
+Skip dependency installation where supported:
+
+```bash
+dev next web-app --no-install
+dev fastapi my-api --no-install
+dev django my-app --python python3.13
+```
+
+## Project Lifecycle
+
+Run these commands from a project root or any child directory:
+
+```bash
+dev install
+dev run
+dev test
+dev build
+dev check
+dev clean
+dev open
+```
+
+You can also pass a project path:
+
+```bash
+dev test ../my-api
+dev build ~/Projects/my-app
+dev open ~/Projects/my-app --editor cursor
+```
+
+DevCmd detects projects using files such as `package.json`, `pyproject.toml`, `manage.py`, `pubspec.yaml`, `gradlew`, `.xcworkspace`, and `.xcodeproj`. Node package managers are selected from lockfiles. Node lifecycle commands use the project's `package.json` scripts; Python commands prefer the project's `.venv`.
+
+`dev inspect` reports the detected type, root, package manager, and the exact command resolved for every lifecycle action. Unsupported actions are shown with a reason instead of failing the whole inspection.
+
+`dev check` runs the quality sequence supported by the detected project:
+
+- Node.js: available `lint`, `typecheck`, `test`, then `build` scripts
+- Python: Ruff when configured, then pytest and package build
+- Flutter: analyze then test
+- Android: Gradle lint and test
+- iOS: Xcode analyze and build
+
+Current native defaults:
+
+- Flutter build: `flutter build apk`
+- Android run/install: `./gradlew installDebug`
+- Android build: `./gradlew assembleDebug`
+- iOS build/test/clean: `xcodebuild` with the detected workspace or project
+- iOS automatic run is intentionally not provided because it requires an explicit scheme and destination
+
+Open platform tools:
+
+```bash
+dev open android
+dev open ios
+```
+
 ## Device Commands
 
 ```bash
@@ -115,6 +213,51 @@ dev ios --shutdown-all
 ```
 
 `dev devices` shows device name, runtime, and `Booted`/`Shutdown` status.
+
+The standalone `dev android` and `dev ios` commands manage devices. They do not create native source projects.
+
+## Configuration
+
+DevCmd stores user defaults in `~/.devcmd/config.json`:
+
+```bash
+dev config
+dev config set packageManager pnpm
+dev config set initializeGit false
+dev config set python python3.13
+dev config set editor cursor
+```
+
+Default configuration:
+
+```json
+{
+  "packageManager": "npm",
+  "initializeGit": true,
+  "python": "python3",
+  "editor": "code"
+}
+```
+
+## Recent Projects
+
+Successful scaffold and lifecycle commands register projects in `~/.devcmd/projects.json`:
+
+```bash
+dev projects
+dev open recent
+```
+
+## Shell Completion
+
+Generate completion for the current shell:
+
+```bash
+dev completion zsh > ~/.zfunc/_dev
+dev completion bash > ~/.devcmd-completion.bash
+```
+
+For Zsh, ensure `~/.zfunc` is included in `fpath`. For Bash, source the generated file from `.bashrc`. Completion generation itself prints a pure shell script, so it can also be evaluated or managed by a dotfiles tool.
 
 ## History
 
@@ -138,6 +281,9 @@ History entries store executables and argument arrays instead of shell command s
 --npm, --pnpm, --yarn, --bun
 --git, --no-git
 --eslint, --no-eslint
+--no-install
+--python <executable>
+--editor <executable>
 --cold-boot
 --shutdown-all
 ```
@@ -152,6 +298,9 @@ src/cli.js          Prompt and command orchestration
 src/commands/       Framework, device, and history commands
 src/config/         Branding, version, and supported frameworks
 src/devices/        Android and iOS discovery
+src/handlers/       CLI command handlers
+src/projects/       Detection, lifecycle adapters, and recent-project registry
+src/runtime/        Shared command execution flow
 src/runner/         Command formatting and process execution
 src/utils/          Argument parsing and validation
 test/               Node.js unit tests
@@ -163,4 +312,48 @@ Run the test suite with:
 npm test
 ```
 
+### Release
+
+Create a release interactively and choose `patch`, `minor`, `major`, the current version, or a custom semantic version:
+
+```bash
+npm run release
+```
+
+On macOS, double-click `release.command` in Finder to open Terminal and choose either a real release or a dry-run preview. The launcher runs the release through a Zsh login shell so Node.js, NVM, and GitHub CLI remain available without loading Zsh configuration inside Bash. It keeps the window open after an error so the message can be reviewed.
+
+The release script validates Git and GitHub CLI state, checks that local `main` is not behind `origin/main`, runs tests and package validation, updates `package.json` and `package-lock.json`, commits all current changes, creates an annotated tag, pushes the branch and tag, and creates a GitHub Release with generated notes.
+
+Use a specific increment or version for automation:
+
+```bash
+npm run release -- patch
+npm run release -- minor
+npm run release -- 3.0.0
+```
+
+Preview all checks and the release plan without changing the repository or publishing anything:
+
+```bash
+npm run release -- patch --dry-run
+```
+
+Pass `--yes` for a non-interactive release or `--draft` to create a draft GitHub Release. The `gh` CLI must be installed and authenticated with `gh auth login`.
+
 `SIGINT` and `SIGTERM` are forwarded to the active child process. DevCmd preserves child exit codes, uses `127` for missing executables, and uses conventional signal exit codes such as `130` for `SIGINT`.
+
+Lifecycle behavior is implemented through project adapters under `src/projects/adapters/`. Detection, inspection, and execution all use the same adapters, preventing displayed commands from drifting away from commands that actually run.
+
+## AI Agent Skills
+
+DevCmd keeps reusable AI instructions in a vendor-neutral directory:
+
+```text
+.ai/skills/                 Canonical skill source
+.claude/skills              Claude Code discovery link
+.agents/skills              Codex discovery link
+AGENTS.md                   Independent Codex instructions
+CLAUDE.md                   Independent Claude Code instructions
+```
+
+`AGENTS.md` and `CLAUDE.md` do not import or reference each other. Each agent has independent project instructions, while both discovery directories point to `.ai/skills` so Claude Code and Codex use the same canonical skill content. The initial `devcmd-add-framework` skill guides agents through adding framework support, validating official scaffolders, preserving shell-safe command execution, updating tests, and documenting the command.

@@ -167,6 +167,16 @@ test('Django uses the official startproject command after setup', () => {
   assert.deepEqual(commands.at(-1), { executable: 'git', args: ['-C', 'my-app', 'init'] });
 });
 
+test('no-install is forwarded to supported scaffolders', () => {
+  assert.ok(
+    buildFrameworkCommands('next', 'site', { noInstall: true, git: false })[0].args.includes('--skip-install')
+  );
+  assert.ok(
+    buildFrameworkCommands('react_native', 'mobile', { noInstall: true, git: false })[0].args.includes('--no-install')
+  );
+  assert.deepEqual(buildFrameworkCommands('fastapi', 'api', { noInstall: true, git: false }).length, 1);
+});
+
 test('device builders do not require shell chaining', () => {
   assert.deepEqual(buildAndroidCommands('Pixel_10', { coldBoot: true }), [
     { executable: 'emulator', args: ['-avd', 'Pixel_10', '-no-snapshot-load'] },

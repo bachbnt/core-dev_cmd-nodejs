@@ -1,0 +1,6 @@
+# Copyright (c) 2026 bachbnt
+
+interface:
+  display_name: "DevCmd Add Framework"
+  short_description: "Add framework support across DevCmd safely"
+  default_prompt: "Use $devcmd-add-framework to add a framework to DevCmd end to end."

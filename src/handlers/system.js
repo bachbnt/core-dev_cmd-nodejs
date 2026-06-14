@@ -1,0 +1,72 @@
+// Copyright (c) 2026 bachbnt
+
+const { CONFIG_FILE, PROJECTS_FILE, frameworkDefinitions } = require('../config');
+const { setConfigValue } = require('../config/user');
+const { getExistingProjects } = require('../projects/recent');
+const { checkTools } = require('../runner/check');
+
+function printConfig(p, config) {
+  p.note(JSON.stringify(config, null, 2), `Config: ${CONFIG_FILE}`);
+}
+
+function handleConfig(context) {
+  const { p, positionals, config } = context;
+  if (positionals.length === 0 || (positionals[0] === 'show' && positionals.length === 1)) {
+    printConfig(p, config);
+    p.outro('Use: dev config set <key> <value>');
+    return 0;
+  }
+  if (positionals[0] === 'set' && positionals.length === 3) {
+    printConfig(p, setConfigValue(positionals[1], positionals[2]));
+    p.outro('Configuration saved.');
+    return 0;
+  }
+  throw new Error('Usage: dev config [show] or dev config set <key> <value>');
+}
+
+function handleDoctor(context) {
+  const { p, pc, config } = context;
+  const checks = checkTools(config);
+  p.note(checks.map((check) => {
+    const marker = check.found ? pc.green('OK') : check.required ? pc.red('MISSING') : pc.yellow('optional');
+    return `${marker.padEnd(18)} ${check.name.padEnd(18)} ${check.version || check.path || ''}`;
+  }).join('\n'), 'Development environment');
+  const missing = checks.filter((check) => check.required && !check.found);
+  p.outro(missing.length ? 'Required tools are missing.' : 'DevCmd is ready.');
+  return missing.length ? 1 : 0;
+}
+
+function handleProjects(context) {
+  const { p } = context;
+  const projects = getExistingProjects();
+  if (projects.length === 0) {
+    p.outro('No recent projects yet.');
+    return 0;
+  }
+  p.note(
+    projects.map((project, index) => `${index + 1}. ${project.name} [${project.type}]\n   ${project.path}`).join('\n'),
+    `Recent projects: ${PROJECTS_FILE}`
+  );
+  p.outro(`${projects.length} project(s).`);
+  return 0;
+}
+
+function handleInfo(context) {
+  const { p, pc } = context;
+  p.note(
+    Object.entries(frameworkDefinitions)
+      .map(([name, definition]) => `${pc.bold(name)}: ${definition.description}`)
+      .join('\n'),
+    'Supported frameworks'
+  );
+  p.outro('Run dev help for usage and options.');
+  return 0;
+}
+
+module.exports = {
+  handleConfig,
+  handleDoctor,
+  handleInfo,
+  handleProjects,
+  printConfig,
+};

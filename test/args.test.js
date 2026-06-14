@@ -21,7 +21,11 @@ test('parseArgs reads target and project presets', () => {
     packageManager: 'pnpm',
     git: false,
     eslint: true,
+    noInstall: false,
+    python: undefined,
+    editor: undefined,
   });
+  assert.deepEqual(result.positionals, ['my-app']);
 });
 
 test('parseArgs supports long package manager option', () => {
@@ -33,7 +37,14 @@ test('parseArgs supports long package manager option', () => {
 test('parseArgs rejects unsupported and incomplete options', () => {
   assert.throws(() => parseArgs(['react', 'app', '--unknown']), /Unsupported option/);
   assert.throws(() => parseArgs(['react', 'app', '--pm']), /Package manager must be one of/);
-  assert.throws(() => parseArgs(['react', 'app', 'extra']), /Unsupported option/);
+  assert.deepEqual(parseArgs(['config', 'set', 'editor', 'code']).positionals, ['set', 'editor', 'code']);
+});
+
+test('parseArgs reads install, Python, and editor options', () => {
+  assert.equal(parseArgs(['fastapi', 'api', '--no-install']).options.noInstall, true);
+  assert.equal(parseArgs(['django', 'app', '--python', 'python3.13']).options.python, 'python3.13');
+  assert.equal(parseArgs(['open', '--editor', 'cursor']).options.editor, 'cursor');
+  assert.throws(() => parseArgs(['django', 'app', '--python']), /requires/);
 });
 
 test('command flag validation limits device flags', () => {
@@ -65,6 +76,8 @@ test('framework validation enforces capabilities', () => {
       eslint: true,
     })
   );
+  assert.throws(() => validateFrameworkOptions('django', { noInstall: true }), /does not support/);
+  assert.throws(() => validateFrameworkOptions('react', { python: 'python3' }), /does not support/);
 });
 
 test('project name validation rejects shell metacharacters', () => {

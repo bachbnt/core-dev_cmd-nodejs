@@ -1,7 +1,9 @@
 // Copyright (c) 2026 bachbnt
 
-function createCommand(executable, args = []) {
-  return { executable, args: args.map(String) };
+function createCommand(executable, args = [], options = {}) {
+  const command = { executable, args: args.map(String) };
+  if (options.cwd) command.cwd = options.cwd;
+  return command;
 }
 
 function formatArgument(value) {
@@ -11,7 +13,8 @@ function formatArgument(value) {
 }
 
 function formatCommand(command) {
-  return [command.executable, ...command.args].map(formatArgument).join(' ');
+  const formatted = [command.executable, ...command.args].map(formatArgument).join(' ');
+  return command.cwd ? `(cd ${formatArgument(command.cwd)} && ${formatted})` : formatted;
 }
 
 function formatSequence(commands) {
@@ -23,7 +26,8 @@ function isCommand(value) {
     value &&
       typeof value.executable === 'string' &&
       Array.isArray(value.args) &&
-      value.args.every((arg) => typeof arg === 'string')
+      value.args.every((arg) => typeof arg === 'string') &&
+      (value.cwd === undefined || typeof value.cwd === 'string')
   );
 }
 

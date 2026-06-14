@@ -1,9 +1,10 @@
 {
   "name": "devcmd",
-  "version": "2.1.0",
-  "description": "DevCmd project scaffolding and simulator management CLI",
+  "version": "2.3.0",
+  "description": "DevCmd project scaffolding, lifecycle, and development environment CLI",
   "bin": {
-    "dev": "./dev"
+    "dev": "./dev",
+    "devcmd": "./dev"
   },
   "files": [
     "dev",
@@ -11,6 +12,7 @@
   ],
   "scripts": {
     "setup": "./scripts/setup-dev.sh",
+    "release": "./scripts/release.sh",
     "test": "node --test"
   },
   "keywords": [
@@ -20,6 +22,14 @@
   ],
   "author": "bachbnt",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bachbnt/dev-cmd.git"
+  },
+  "homepage": "https://github.com/bachbnt/dev-cmd#readme",
+  "bugs": {
+    "url": "https://github.com/bachbnt/dev-cmd/issues"
+  },
   "engines": {
     "node": ">=20.19.0"
   },

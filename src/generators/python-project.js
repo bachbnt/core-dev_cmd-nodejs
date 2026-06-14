@@ -15,7 +15,7 @@ function write(relativePath, content) {
 }
 
 function pyproject(name, dependencies, options = {}) {
-  const devDependencies = ['pytest>=8,<10', ...(options.devDependencies || [])];
+  const devDependencies = ['pytest>=8,<10', 'build>=1.2,<2.0', ...(options.devDependencies || [])];
   const pytestOptions = options.pytestOptions || '';
   return `[build-system]
 requires = ["setuptools>=77"]

@@ -14,13 +14,18 @@ function parseArgs(argv) {
     packageManager: undefined,
     git: undefined,
     eslint: undefined,
+    noInstall: false,
+    python: undefined,
+    editor: undefined,
   };
+  const positionals = [];
 
   while (args.length > 0) {
     const arg = args.shift();
 
-    if (!arg.startsWith('-') && !options.target) {
-      options.target = arg;
+    if (!arg.startsWith('-')) {
+      positionals.push(arg);
+      if (!options.target) options.target = arg;
       continue;
     }
 
@@ -33,6 +38,19 @@ function parseArgs(argv) {
     else if (arg === '--no-git') options.git = false;
     else if (arg === '--eslint') options.eslint = true;
     else if (arg === '--no-eslint') options.eslint = false;
+    else if (arg === '--no-install') options.noInstall = true;
+    else if (arg === '--install') options.noInstall = false;
+    else if (arg === '--python') {
+      options.python = args.shift();
+      if (!options.python || options.python.startsWith('-')) {
+        throw new Error('--python requires an executable name or path.');
+      }
+    } else if (arg === '--editor') {
+      options.editor = args.shift();
+      if (!options.editor || options.editor.startsWith('-')) {
+        throw new Error('--editor requires an application or executable name.');
+      }
+    }
     else if (PACKAGE_MANAGERS.includes(arg.replace(/^--/, ''))) {
       options.packageManager = arg.replace(/^--/, '');
     } else if (arg === '--package-manager' || arg === '--pm') {
@@ -45,7 +63,7 @@ function parseArgs(argv) {
     }
   }
 
-  return { command, options };
+  return { command, options, positionals };
 }
 
 function validateCommandFlags(command, options) {
@@ -82,6 +100,12 @@ function validateFrameworkOptions(command, options) {
   }
   if (options.eslint !== undefined && !capabilities.eslint) {
     throw new Error(`${command} does not support configuring ESLint.`);
+  }
+  if (options.noInstall && !capabilities.noInstall) {
+    throw new Error(`${command} does not support --no-install.`);
+  }
+  if (options.python && !capabilities.python) {
+    throw new Error(`${command} does not support selecting a Python executable.`);
   }
   if (
     Array.isArray(capabilities.packageManager) &&

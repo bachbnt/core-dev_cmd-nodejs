@@ -33,10 +33,12 @@ function runProcess(command, options = {}) {
     const onSigterm = () => forwardSignal('SIGTERM');
 
     try {
-      child = spawnImpl(command.executable, command.args, {
+      const spawnOptions = {
         shell: false,
         stdio,
-      });
+      };
+      if (command.cwd) spawnOptions.cwd = command.cwd;
+      child = spawnImpl(command.executable, command.args, spawnOptions);
     } catch (error) {
       finish({ ok: false, exitCode: error.code === 'ENOENT' ? 127 : 1, error });
       return;
