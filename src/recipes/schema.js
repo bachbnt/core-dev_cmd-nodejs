@@ -4,7 +4,7 @@ const RECIPE_NAME = /^[a-z][a-z0-9_]*$/;
 const INPUT_NAME = /^[A-Za-z][A-Za-z0-9_]*$/;
 const ACTION_TYPES = new Set(['run', 'mkdir', 'write', 'copy']);
 const CAPABILITIES = new Set(['language', 'packageManager', 'git', 'eslint', 'noInstall', 'python']);
-const PACKAGE_MANAGERS = new Set(['npm', 'pnpm', 'yarn', 'bun']);
+const PACKAGE_MANAGERS = new Set(['npm', 'pnpm', 'yarn']);
 const RESERVED_RECIPES = new Set([
   'doctor', 'inspect', 'install', 'run', 'test', 'build', 'clean', 'check', 'open',
   'devices', 'android', 'ios', 'history', 'again', 'projects', 'recipes', 'openers', 'config', 'completion',

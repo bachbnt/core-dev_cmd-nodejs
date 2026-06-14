@@ -53,7 +53,6 @@ function checkTools(config, options = {}) {
     { name: 'Git', executable: 'git', args: ['--version'], required: true },
     { name: 'pnpm', executable: 'pnpm', args: ['--version'] },
     { name: 'Yarn', executable: 'yarn', args: ['--version'] },
-    { name: 'Bun', executable: 'bun', args: ['--version'] },
     { name: 'Python', executable: config.python, args: ['--version'] },
     { name: 'Flutter', executable: 'flutter', args: ['--version', '--machine'] },
     { name: 'Android adb', executable: 'adb', args: ['version'] },

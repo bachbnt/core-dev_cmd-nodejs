@@ -109,6 +109,10 @@ test('recipe validation rejects shell fields, reserved names, and unsafe paths',
   assert.throws(() => validateRecipe(customRecipe({ name: 'build' })), /reserved/);
   assert.throws(() => validateRecipe(customRecipe({ name: 'openers' })), /reserved/);
   assert.throws(
+    () => validateRecipe(customRecipe({ capabilities: { packageManager: ['invalid'] } })),
+    /supported managers/
+  );
+  assert.throws(
     () => validateRecipe(customRecipe({ inputs: { target: { required: true } } })),
     /input is reserved/
   );

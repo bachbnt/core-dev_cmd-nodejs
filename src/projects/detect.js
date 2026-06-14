@@ -17,10 +17,9 @@ function readJson(file, fsImpl = fs) {
 function detectPackageManager(root, packageJson = {}, fsImpl = fs) {
   if (exists(root, 'pnpm-lock.yaml', fsImpl)) return 'pnpm';
   if (exists(root, 'yarn.lock', fsImpl)) return 'yarn';
-  if (exists(root, 'bun.lock', fsImpl) || exists(root, 'bun.lockb', fsImpl)) return 'bun';
   if (exists(root, 'package-lock.json', fsImpl)) return 'npm';
   const declared = packageJson.packageManager?.split('@')[0];
-  return ['npm', 'pnpm', 'yarn', 'bun'].includes(declared) ? declared : 'npm';
+  return ['npm', 'pnpm', 'yarn'].includes(declared) ? declared : 'npm';
 }
 
 function detectNodeType(packageJson) {

@@ -32,13 +32,14 @@ test('parseArgs reads target and project presets', () => {
 });
 
 test('parseArgs supports long package manager option', () => {
-  const result = parseArgs(['react', 'app', '--package-manager', 'bun', '--dry-run']);
-  assert.equal(result.options.packageManager, 'bun');
+  const result = parseArgs(['react', 'app', '--package-manager', 'yarn', '--dry-run']);
+  assert.equal(result.options.packageManager, 'yarn');
   assert.equal(result.options.dryRun, true);
 });
 
 test('parseArgs rejects unsupported and incomplete options', () => {
   assert.throws(() => parseArgs(['react', 'app', '--unknown']), /Unsupported option/);
+  assert.throws(() => parseArgs(['react', 'app', '--package-manager', 'invalid']), /must be one of/);
   assert.throws(() => parseArgs(['react', 'app', '--pm']), /Package manager must be one of/);
   assert.deepEqual(parseArgs(['config', 'set', 'editor', 'code']).positionals, ['set', 'editor', 'code']);
 });
@@ -82,7 +83,7 @@ test('framework validation enforces capabilities', () => {
   );
   assert.throws(
     () => validateFrameworkOptions('react_native_cli', { packageManager: 'pnpm' }),
-    /supports package managers: npm, yarn, bun/
+    /supports package managers: npm, yarn/
   );
   assert.doesNotThrow(() =>
     validateFrameworkOptions('next', {

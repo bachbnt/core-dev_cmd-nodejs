@@ -150,4 +150,5 @@ test('CLI help lists built-in and custom openers with aliases', () => {
   assert.match(result.stdout, /Openers:/);
   assert.match(result.stdout, /android_studio.*Android Studio native project \(android\)/);
   assert.match(result.stdout, /fleet.*Custom Fleet opener.*\[user\]/);
+  assert.match(result.stdout, /--npm, --pnpm, --yarn.*Select package manager/);
 });

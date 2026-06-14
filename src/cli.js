@@ -57,19 +57,26 @@ function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   console.log(`  ${pc.cyan('history'.padEnd(16))} ${pc.dim('Show recent successful commands')}`);
   console.log(`  ${pc.cyan('again'.padEnd(16))} ${pc.dim('Run the latest successful command again')}`);
   console.log(`\n${pc.bold('Options:')}`);
-  console.log('  --dry-run                  Print without executing');
-  console.log('  --typescript, --javascript Select project language');
-  console.log(`  ${PACKAGE_MANAGERS.map((manager) => `--${manager}`).join(', ')}`);
-  console.log('  --git, --no-git            Toggle Git initialization');
-  console.log('  --eslint, --no-eslint      Toggle ESLint where supported');
-  console.log('  --no-install               Scaffold without installing dependencies');
-  console.log('  --python <executable>      Select Python executable');
-  console.log('  --set <name=value>         Set a custom recipe input');
-  console.log('  --editor <executable>      Override editor for dev open');
-  console.log('  --with <opener>            Select an opener for dev open');
-  console.log('  --list                     List available openers');
-  console.log('  --cold-boot                Cold boot Android emulator');
-  console.log('  --shutdown-all             Shutdown all iOS simulators\n');
+  const printOption = (flags, description) => {
+    console.log(`  ${flags.padEnd(31)} ${pc.dim(description)}`);
+  };
+  printOption('--dry-run', 'Print without executing');
+  printOption('--typescript, --javascript', 'Select project language');
+  printOption(
+    PACKAGE_MANAGERS.map((manager) => `--${manager}`).join(', '),
+    'Select package manager'
+  );
+  printOption('--git, --no-git', 'Toggle Git initialization');
+  printOption('--eslint, --no-eslint', 'Toggle ESLint where supported');
+  printOption('--no-install', 'Scaffold without installing dependencies');
+  printOption('--python <executable>', 'Select Python executable');
+  printOption('--set <name=value>', 'Set a custom recipe input');
+  printOption('--editor <executable>', 'Override editor for dev open');
+  printOption('--with <opener>', 'Select an opener for dev open');
+  printOption('--list', 'List available openers');
+  printOption('--cold-boot', 'Cold boot Android emulator');
+  printOption('--shutdown-all', 'Shutdown all iOS simulators');
+  console.log('');
 }
 
 async function dispatch(context) {

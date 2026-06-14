@@ -27,7 +27,7 @@ const SYSTEM_COMMANDS = [
 const COMMANDS = [...Object.keys(frameworkDefinitions), ...SYSTEM_COMMANDS];
 
 const OPTIONS = [
-  '--dry-run', '--typescript', '--javascript', '--npm', '--pnpm', '--yarn', '--bun',
+  '--dry-run', '--typescript', '--javascript', '--npm', '--pnpm', '--yarn',
   '--git', '--no-git', '--eslint', '--no-eslint', '--no-install', '--python', '--editor',
   '--cold-boot', '--shutdown-all', '--set', '--with', '--list',
 ];

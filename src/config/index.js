@@ -11,7 +11,7 @@ const HISTORY_FILE = path.join(os.homedir(), '.devcmd', 'history.json');
 const OPENERS_DIR = path.join(os.homedir(), '.devcmd', 'openers');
 const PROJECTS_FILE = path.join(os.homedir(), '.devcmd', 'projects.json');
 const RECIPES_DIR = path.join(os.homedir(), '.devcmd', 'recipes');
-const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'];
+const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn'];
 const DEFAULT_DEVICES = {
   android: 'Pixel_9_Pro_Fold',
   ios: 'iPhone 17 Pro',

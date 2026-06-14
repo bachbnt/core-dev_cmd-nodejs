@@ -56,7 +56,7 @@ test('React Native defaults to Expo and Community CLI stays explicit', () => {
   );
   assert.deepEqual(
     buildFrameworkCommands('react_native_cli', 'NativeApp', {
-      packageManager: 'bun',
+      packageManager: 'yarn',
       git: false,
     }),
     [
@@ -67,7 +67,7 @@ test('React Native defaults to Expo and Community CLI stays explicit', () => {
           'init',
           'NativeApp',
           '--pm',
-          'bun',
+          'yarn',
           '--skip-git-init',
         ],
       },
