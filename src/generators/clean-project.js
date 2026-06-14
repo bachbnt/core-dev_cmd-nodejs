@@ -16,7 +16,7 @@ const CLEAN_TARGETS = {
   nest: ['dist', 'coverage'],
   express: ['dist', 'coverage'],
   react_native: ['.expo', 'dist', 'coverage'],
-  react_native_bare: ['android/app/build', 'ios/build', 'coverage'],
+  react_native_cli: ['android/app/build', 'ios/build', 'coverage'],
   python: ['build', 'dist', '.pytest_cache', '.coverage'],
   django: ['build', 'dist', '.pytest_cache', '.coverage'],
   fastapi: ['build', 'dist', '.pytest_cache', '.coverage'],

@@ -24,6 +24,7 @@ test('parseArgs reads target and project presets', () => {
     noInstall: false,
     python: undefined,
     editor: undefined,
+    values: {},
   });
   assert.deepEqual(result.positionals, ['my-app']);
 });
@@ -45,6 +46,11 @@ test('parseArgs reads install, Python, and editor options', () => {
   assert.equal(parseArgs(['django', 'app', '--python', 'python3.13']).options.python, 'python3.13');
   assert.equal(parseArgs(['open', '--editor', 'cursor']).options.editor, 'cursor');
   assert.throws(() => parseArgs(['django', 'app', '--python']), /requires/);
+  assert.deepEqual(
+    parseArgs(['react', 'app', '--set', 'module=example.com/app']).options.values,
+    { module: 'example.com/app' }
+  );
+  assert.throws(() => parseArgs(['react', 'app', '--set', 'invalid']), /name=value/);
 });
 
 test('command flag validation limits device flags', () => {
@@ -65,7 +71,7 @@ test('framework validation enforces capabilities', () => {
     /does not support selecting TypeScript/
   );
   assert.throws(
-    () => validateFrameworkOptions('react_native_bare', { packageManager: 'pnpm' }),
+    () => validateFrameworkOptions('react_native_cli', { packageManager: 'pnpm' }),
     /supports package managers: npm, yarn, bun/
   );
   assert.doesNotThrow(() =>

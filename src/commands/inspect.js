@@ -28,6 +28,7 @@ function inspectProject(project, config) {
     root: project.root,
     packageManager: project.packageManager,
     xcode: project.xcode,
+    recipeSource: project.recipe?.source,
     actions: INSPECT_ACTIONS.map((action) => inspectAction(action, project, config)),
   };
 }

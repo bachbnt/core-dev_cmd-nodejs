@@ -17,6 +17,7 @@ DevCmd is an interactive development CLI for scaffolding projects, detecting exi
 - Use consistent `install`, `run`, `test`, `build`, `clean`, and `open` commands.
 - Inspect detected projects and their resolved lifecycle commands before execution.
 - Run framework-aware quality checks with one `dev check` command.
+- Add trusted user-defined framework recipes without changing DevCmd source.
 - Check the local toolchain with `dev doctor`.
 - Store defaults and recently used projects under `~/.devcmd`.
 
@@ -29,17 +30,20 @@ DevCmd is an interactive development CLI for scaffolding projects, detecting exi
 
 ## Installation
 
+> [!IMPORTANT]
+> DevCmd by `bachbnt` is not published to the npm registry. The registry package named `devcmd` belongs to a different project. Do not install this project with `npm install --global devcmd` or run it with `npx devcmd`; use one of the GitHub URLs below.
+
 ### Download
 
 Open the latest GitHub Release to view release notes and downloadable source archives:
 
 [Download the latest release](https://github.com/bachbnt/dev-cmd/releases/latest)
 
-Downloading an archive does not install the CLI automatically. Until a signed macOS installer is provided, use the npm command below for installation. It downloads DevCmd directly and does not clone the repository.
+Downloading an archive does not install the CLI automatically. Until a signed macOS installer is provided, use npm as the installer with a GitHub URL below. npm downloads DevCmd from GitHub, not from the npm registry, and no repository clone is required.
 
-### Quick install
+### Install the current source
 
-Install the latest DevCmd source directly from GitHub. This downloads a tarball through npm, so it does not clone the repository and does not require Git:
+Install the newest committed source from the `main` branch. This is the installation that matches the current README:
 
 ```bash
 npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/heads/main.tar.gz
@@ -60,29 +64,31 @@ devcmd help
 
 No repository checkout, `chmod`, `npm link`, or shell `source` command is needed.
 
-### Install a specific release
+### Install a tagged release
 
-Pin installation to a GitHub release tag for reproducible setup:
+For a reproducible released snapshot, install a specific GitHub tag. The latest published release is currently `v2.3.0`:
 
 ```bash
 npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.3.0.tar.gz
 ```
 
-Available versions are listed on the [GitHub Releases](https://github.com/bachbnt/dev-cmd/releases) page.
+Tagged releases can predate features documented on `main`. Check [GitHub Releases](https://github.com/bachbnt/dev-cmd/releases) for newer tags and release notes. These archive URLs do not require Git.
 
 ### Update or uninstall
 
-Run the quick-install command again to update to the latest `main` version. To remove DevCmd:
+Install a newer release tag, or run the `main` installation command again, to update DevCmd. To remove a GitHub-installed copy:
 
 ```bash
 npm uninstall --global devcmd
 ```
 
+The uninstall command uses the package name recorded by the installed GitHub archive. It does not mean this project is available from the npm registry.
+
 When using NVM, global npm packages belong to the active Node.js version. Install DevCmd once for each Node.js version where it should be available. If the command is not found immediately after installation, open a new terminal and check the active npm prefix with `npm config get prefix`.
 
-### Alternative GitHub install
+### Alternative GitHub syntax
 
-If Git is installed, npm also accepts the shorter GitHub package syntax:
+If Git is installed, npm also accepts this shorter syntax for the latest source on `main`:
 
 ```bash
 npm install --global github:bachbnt/dev-cmd
@@ -154,7 +160,7 @@ dev inspect ../my-project
 | `flutter` | `flutter create` |
 | `react` | Vite React template for apps built from scratch |
 | `react_native` | Expo via `create-expo-app` (recommended) |
-| `react_native_bare` | React Native Community CLI without a framework |
+| `react_native_cli` | React Native Community CLI without a framework |
 | `next` | `create-next-app` |
 | `nuxt` | Official `create-nuxt` minimal starter |
 | `vue` | Official `create-vue` |
@@ -166,7 +172,7 @@ dev inspect ../my-project
 
 Direct targets use recommended defaults: TypeScript, npm, Git, and ESLint where the selected scaffolder supports them. Run a framework command without a target to configure supported presets interactively.
 
-React recommends using a framework for new production applications. Use `dev next` for a full-stack React framework, or `dev react` when a client-side Vite application is the right fit. React Native recommends a framework, so `dev react_native` uses Expo; use `dev react_native_bare` only when framework constraints do not fit the project.
+React recommends using a framework for new production applications. Use `dev next` for a full-stack React framework, or `dev react` when a client-side Vite application is the right fit. React Native recommends a framework, so `dev react_native` uses Expo; use `dev react_native_cli` only when framework constraints do not fit the project.
 
 Nuxt is the full-stack Vue option. Nuxt has built-in TypeScript support, so `dev nuxt` exposes package manager and Git choices without a redundant TypeScript/JavaScript flag.
 
@@ -181,7 +187,7 @@ dev flask my-app
 ```bash
 dev react web-app --typescript --pnpm
 dev react_native mobile-app --typescript --pnpm
-dev react_native_bare NativeApp --bun
+dev react_native_cli NativeApp --bun
 ```
 
 Skip dependency installation where supported:
@@ -298,6 +304,8 @@ dev completion bash > ~/.devcmd-completion.bash
 
 For Zsh, ensure `~/.zfunc` is included in `fpath`. For Bash, source the generated file from `.bashrc`. Completion generation itself prints a pure shell script, so it can also be evaluated or managed by a dotfiles tool.
 
+The generated completion registers both executable names: `dev` and `devcmd`.
+
 ## History
 
 ```bash
@@ -316,13 +324,14 @@ History entries store executables and argument arrays instead of shell command s
 --dry-run
 --typescript, --ts
 --javascript, --js
---package-manager <npm|pnpm|yarn|bun>
+--package-manager <npm|pnpm|yarn|bun>, --pm <npm|pnpm|yarn|bun>
 --npm, --pnpm, --yarn, --bun
 --git, --no-git
 --eslint, --no-eslint
---no-install
+--install, --no-install
 --python <executable>
 --editor <executable>
+--set <name=value>
 --cold-boot
 --shutdown-all
 ```
@@ -335,10 +344,11 @@ DevCmd does not execute generated commands through a shell. Every executable and
 dev                 CLI entry point
 src/cli.js          Prompt and command orchestration
 src/commands/       Framework, device, and history commands
-src/config/         Branding, version, and supported frameworks
+src/config/         Branding, version, user paths, and defaults
 src/devices/        Android and iOS discovery
 src/handlers/       CLI command handlers
 src/projects/       Detection, lifecycle adapters, and recent-project registry
+src/recipes/        Built-in and custom framework recipe engine
 src/runtime/        Shared command execution flow
 src/runner/         Command formatting and process execution
 src/utils/          Argument parsing and validation
@@ -383,6 +393,77 @@ Pass `--yes` for a non-interactive release or `--draft` to create a draft GitHub
 
 Lifecycle behavior is implemented through project adapters under `src/projects/adapters/`. Detection, inspection, and execution all use the same adapters, preventing displayed commands from drifting away from commands that actually run.
 
+## Custom Framework Recipes
+
+All default framework commands are built-in recipes stored in `src/recipes/built-ins.json`. User recipes use the same validation, placeholder resolver, structured process execution, detection, and lifecycle pipeline. DevCmd does not load project-local recipes automatically; only recipes placed in the trusted user directory are discovered:
+
+```text
+~/.devcmd/recipes/*.json
+```
+
+List active recipes and their source:
+
+```bash
+dev recipes
+```
+
+Validate a recipe before installing it:
+
+```bash
+dev recipes validate ./my-backend.json
+mkdir -p ~/.devcmd/recipes
+cp ./my-backend.json ~/.devcmd/recipes/
+```
+
+A minimal multi-step recipe can define inputs, safe file actions, executable requirements, detection rules, and lifecycle commands:
+
+```json
+{
+  "name": "my_backend",
+  "description": "Example custom backend",
+  "capabilities": { "git": true },
+  "inputs": {
+    "module": {
+      "description": "Module identifier",
+      "required": true
+    }
+  },
+  "requirements": [
+    "node",
+    "tool-cli",
+    { "value": "git", "when": { "option": "git", "equals": true } }
+  ],
+  "actions": [
+    { "type": "mkdir", "path": "." },
+    { "type": "write", "path": ".devcmd-recipe", "content": "my_backend\n" },
+    {
+      "type": "run",
+      "executable": "tool-cli",
+      "args": ["init", "--module", "{module}"],
+      "cwd": "{target}"
+    }
+  ],
+  "detect": {
+    "priority": 10,
+    "rules": [{ "files": [".devcmd-recipe"] }]
+  },
+  "lifecycle": {
+    "run": [{ "type": "run", "executable": "tool-cli", "args": ["run"], "cwd": "{root}" }],
+    "test": [{ "type": "run", "executable": "tool-cli", "args": ["test"], "cwd": "{root}" }],
+    "build": [{ "type": "run", "executable": "tool-cli", "args": ["build"], "cwd": "{root}" }]
+  }
+}
+```
+
+Run it like a built-in framework:
+
+```bash
+dev my_backend my-api --set module=example.com/my-api --dry-run
+dev my_backend my-api --set module=example.com/my-api
+```
+
+Supported scaffold and lifecycle action types are `run`, `mkdir`, `write`, and `copy`. File destinations are restricted to the target project, `copy` sources must remain inside the recipe directory, and existing files are not overwritten. Recipe commands never use `shell: true` or shell command strings. A user recipe with the same name overrides its built-in recipe.
+
 ## AI Agent Skills
 
 DevCmd keeps reusable AI instructions in a vendor-neutral directory:
@@ -398,6 +479,8 @@ CLAUDE.md                   Independent Claude Code instructions
 `AGENTS.md` and `CLAUDE.md` do not import or reference each other. Each agent has independent project instructions, while both discovery directories point to `.ai/skills` so Claude Code and Codex use the same canonical skill content.
 
 Each skill uses a portable `SKILL.md` as its required entrypoint. Vendor-specific UI metadata is intentionally omitted so the same skill directories remain neutral between Claude Code and Codex.
+
+These AI instruction files are contributor tooling stored in the GitHub repository. They are not included in the globally installed CLI package produced by `npm pack`.
 
 | Skill | Purpose |
 | --- | --- |

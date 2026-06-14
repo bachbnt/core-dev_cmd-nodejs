@@ -1,0 +1,442 @@
+[
+  {
+    "name": "flutter",
+    "description": "Flutter CLI",
+    "capabilities": { "git": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 70, "rules": [{ "files": ["pubspec.yaml"] }] },
+    "lifecycle": { "adapter": "flutter" },
+    "requirements": [
+      "node",
+      "flutter",
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      {
+        "type": "run",
+        "executable": "flutter",
+        "args": [
+          "create",
+          "{target}",
+          { "value": "--no-pub", "when": { "option": "noInstall", "equals": true } }
+        ]
+      },
+      {
+        "type": "run",
+        "executable": "git",
+        "args": ["-C", "{target}", "init"],
+        "when": { "option": "git", "equals": true }
+      }
+    ]
+  },
+  {
+    "name": "react",
+    "description": "React app from scratch, powered by Vite",
+    "capabilities": { "language": true, "packageManager": true, "git": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 20, "rules": [{ "dependencies": ["react"] }] },
+    "lifecycle": { "adapter": "node" },
+    "requirements": [
+      "node",
+      {
+        "option": "packageManager",
+        "map": { "npm": "npm", "pnpm": "pnpm", "yarn": "yarn", "bun": "bun" }
+      },
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      {
+        "type": "run",
+        "executable": {
+          "option": "packageManager",
+          "map": { "npm": "npm", "pnpm": "pnpm", "yarn": "yarn", "bun": "bun" }
+        },
+        "args": [
+          {
+            "option": "packageManager",
+            "map": {
+              "npm": ["create", "vite@latest", "{target}", "--"],
+              "pnpm": ["create", "vite", "{target}"],
+              "yarn": ["create", "vite", "{target}"],
+              "bun": ["create", "vite", "{target}"]
+            }
+          },
+          "--template",
+          { "option": "typescript", "map": { "true": "react-ts", "false": "react" } },
+          "--no-interactive"
+        ]
+      },
+      {
+        "type": "run",
+        "executable": "git",
+        "args": ["-C", "{target}", "init"],
+        "when": { "option": "git", "equals": true }
+      }
+    ]
+  },
+  {
+    "name": "react_native",
+    "description": "React Native app powered by Expo (recommended)",
+    "capabilities": { "language": true, "packageManager": true, "git": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 70, "rules": [{ "dependencies": ["expo"] }] },
+    "lifecycle": { "adapter": "node" },
+    "requirements": [
+      "node",
+      {
+        "option": "packageManager",
+        "map": { "npm": "npx", "pnpm": "pnpm", "yarn": "yarn", "bun": "bun" }
+      },
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      {
+        "type": "run",
+        "executable": {
+          "option": "packageManager",
+          "map": { "npm": "npx", "pnpm": "pnpm", "yarn": "yarn", "bun": "bun" }
+        },
+        "args": [
+          {
+            "option": "packageManager",
+            "map": {
+              "npm": ["create-expo-app@latest", "{target}"],
+              "pnpm": ["create", "expo-app", "{target}"],
+              "yarn": ["create", "expo-app", "{target}"],
+              "bun": ["create", "expo-app", "{target}"]
+            }
+          },
+          "--template",
+          { "option": "typescript", "map": { "true": "default", "false": "blank" } },
+          "--yes",
+          { "value": "--no-install", "when": { "option": "noInstall", "equals": true } }
+        ]
+      },
+      {
+        "type": "run",
+        "executable": "git",
+        "args": ["-C", "{target}", "init"],
+        "when": { "option": "git", "equals": true }
+      }
+    ]
+  },
+  {
+    "name": "react_native_cli",
+    "description": "React Native app via Community CLI without a framework",
+    "capabilities": { "packageManager": ["npm", "yarn", "bun"], "git": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 60, "rules": [{ "dependencies": ["react-native"] }] },
+    "lifecycle": { "adapter": "node" },
+    "requirements": [
+      "node",
+      "npx",
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      {
+        "type": "run",
+        "executable": "npx",
+        "args": [
+          "@react-native-community/cli@latest",
+          "init",
+          "{target}",
+          "--pm",
+          "{packageManager}",
+          { "value": "--skip-git-init", "when": { "option": "git", "equals": false } },
+          { "value": "--skip-install", "when": { "option": "noInstall", "equals": true } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "next",
+    "description": "Next.js create-next-app",
+    "capabilities": { "language": true, "packageManager": true, "git": true, "eslint": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 100, "rules": [{ "dependencies": ["next"] }] },
+    "lifecycle": { "adapter": "node" },
+    "requirements": [
+      "node",
+      {
+        "option": "packageManager",
+        "map": { "npm": "npx", "pnpm": "pnpm", "yarn": "yarn", "bun": "bunx" }
+      },
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      {
+        "type": "run",
+        "executable": {
+          "option": "packageManager",
+          "map": { "npm": "npx", "pnpm": "pnpm", "yarn": "yarn", "bun": "bunx" }
+        },
+        "args": [
+          {
+            "option": "packageManager",
+            "map": {
+              "npm": ["create-next-app@latest", "{target}"],
+              "pnpm": ["create", "next-app@latest", "{target}"],
+              "yarn": ["create", "next-app", "{target}"],
+              "bun": ["create-next-app@latest", "{target}"]
+            }
+          },
+          { "option": "typescript", "map": { "true": "--ts", "false": "--js" } },
+          { "option": "eslint", "map": { "true": "--eslint", "false": "--no-linter" } },
+          "--use-{packageManager}",
+          { "value": "--disable-git", "when": { "option": "git", "equals": false } },
+          { "value": "--skip-install", "when": { "option": "noInstall", "equals": true } },
+          "--yes"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "nuxt",
+    "description": "Nuxt full-stack Vue framework",
+    "capabilities": { "packageManager": true, "git": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 90, "rules": [{ "dependencies": ["nuxt"] }] },
+    "lifecycle": { "adapter": "node" },
+    "requirements": [
+      "node",
+      {
+        "option": "packageManager",
+        "map": { "npm": "npm", "pnpm": "pnpm", "yarn": "yarn", "bun": "bun" }
+      },
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      {
+        "type": "run",
+        "executable": {
+          "option": "packageManager",
+          "map": { "npm": "npm", "pnpm": "pnpm", "yarn": "yarn", "bun": "bun" }
+        },
+        "args": [
+          {
+            "option": "packageManager",
+            "map": {
+              "npm": ["create", "nuxt@latest", "{target}", "--"],
+              "pnpm": ["create", "nuxt@latest", "{target}"],
+              "yarn": ["create", "nuxt", "{target}"],
+              "bun": ["create", "nuxt@latest", "{target}"]
+            }
+          },
+          "--template",
+          "minimal",
+          "--packageManager",
+          "{packageManager}",
+          "--gitInit=false",
+          "--modules=",
+          { "value": "--no-install", "when": { "option": "noInstall", "equals": true } }
+        ]
+      },
+      {
+        "type": "run",
+        "executable": "git",
+        "args": ["-C", "{target}", "init"],
+        "when": { "option": "git", "equals": true }
+      }
+    ]
+  },
+  {
+    "name": "vue",
+    "description": "Official create-vue scaffolder",
+    "capabilities": { "language": true, "packageManager": true, "git": true, "eslint": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 40, "rules": [{ "dependencies": ["vue"] }] },
+    "lifecycle": { "adapter": "node" },
+    "requirements": [
+      "node",
+      {
+        "option": "packageManager",
+        "map": { "npm": "npm", "pnpm": "pnpm", "yarn": "yarn", "bun": "bun" }
+      },
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      {
+        "type": "run",
+        "executable": {
+          "option": "packageManager",
+          "map": { "npm": "npm", "pnpm": "pnpm", "yarn": "yarn", "bun": "bun" }
+        },
+        "args": [
+          {
+            "option": "packageManager",
+            "map": {
+              "npm": ["create", "vue@latest", "{target}", "--"],
+              "pnpm": ["create", "vue@latest", "{target}"],
+              "yarn": ["create", "vue@latest", "{target}"],
+              "bun": ["create", "vue@latest", "{target}"]
+            }
+          },
+          { "value": "--typescript", "when": { "option": "typescript", "equals": true } },
+          { "value": "--eslint", "when": { "option": "eslint", "equals": true } },
+          { "value": "--default", "when": { "option": "vueDefault", "equals": true } }
+        ]
+      },
+      {
+        "type": "run",
+        "executable": "git",
+        "args": ["-C", "{target}", "init"],
+        "when": { "option": "git", "equals": true }
+      }
+    ]
+  },
+  {
+    "name": "express",
+    "description": "Official Express generator",
+    "capabilities": { "git": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 30, "rules": [{ "dependencies": ["express"] }] },
+    "lifecycle": { "adapter": "node" },
+    "requirements": [
+      "node",
+      "npx",
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      {
+        "type": "run",
+        "executable": "npx",
+        "args": ["express-generator@latest", "{target}", "--no-view"]
+      },
+      {
+        "type": "run",
+        "executable": "git",
+        "args": ["-C", "{target}", "init"],
+        "when": { "option": "git", "equals": true }
+      }
+    ]
+  },
+  {
+    "name": "nest",
+    "description": "Nest CLI",
+    "capabilities": { "language": true, "packageManager": true, "git": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 80, "rules": [{ "dependencies": ["@nestjs/core"] }] },
+    "lifecycle": { "adapter": "node" },
+    "requirements": [
+      "node",
+      "npx",
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      {
+        "type": "run",
+        "executable": "npx",
+        "args": [
+          "@nestjs/cli@latest",
+          "new",
+          "{target}",
+          "--package-manager",
+          "{packageManager}",
+          "--language",
+          { "option": "typescript", "map": { "true": "TypeScript", "false": "JavaScript" } },
+          { "value": "--skip-git", "when": { "option": "git", "equals": false } },
+          { "value": "--skip-install", "when": { "option": "noInstall", "equals": true } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "django",
+    "description": "Django full-stack Python framework",
+    "capabilities": { "git": true, "python": true },
+    "inputs": {},
+    "detect": {
+      "priority": 80,
+      "rules": [
+        { "files": ["manage.py"] },
+        { "contains": { "pyproject.toml": "django" } }
+      ]
+    },
+    "lifecycle": { "adapter": "python" },
+    "requirements": [
+      "node",
+      "{python}",
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      { "type": "run", "executable": "node", "args": ["{pythonGenerator}", "django", "{target}"] },
+      { "type": "run", "executable": "{python}", "args": ["-m", "venv", "{venvDirectory}"] },
+      { "type": "run", "executable": "{projectPython}", "args": ["-m", "pip", "install", "-e", "{target}[dev]"] },
+      { "type": "run", "executable": "{projectPython}", "args": ["-m", "django", "startproject", "config", "{target}"] },
+      {
+        "type": "run",
+        "executable": "git",
+        "args": ["-C", "{target}", "init"],
+        "when": { "option": "git", "equals": true }
+      }
+    ]
+  },
+  {
+    "name": "fastapi",
+    "description": "FastAPI Python API framework",
+    "capabilities": { "git": true, "python": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 70, "rules": [{ "contains": { "pyproject.toml": "fastapi" } }] },
+    "lifecycle": { "adapter": "python" },
+    "requirements": [
+      "node",
+      { "value": "{python}", "when": { "option": "noInstall", "equals": false } },
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      { "type": "run", "executable": "node", "args": ["{pythonGenerator}", "fastapi", "{target}"] },
+      {
+        "type": "run",
+        "executable": "{python}",
+        "args": ["-m", "venv", "{venvDirectory}"],
+        "when": { "option": "noInstall", "equals": false }
+      },
+      {
+        "type": "run",
+        "executable": "{projectPython}",
+        "args": ["-m", "pip", "install", "-e", "{target}[dev]"],
+        "when": { "option": "noInstall", "equals": false }
+      },
+      {
+        "type": "run",
+        "executable": "git",
+        "args": ["-C", "{target}", "init"],
+        "when": { "option": "git", "equals": true }
+      }
+    ]
+  },
+  {
+    "name": "flask",
+    "description": "Flask lightweight Python web framework",
+    "capabilities": { "git": true, "python": true, "noInstall": true },
+    "inputs": {},
+    "detect": { "priority": 60, "rules": [{ "contains": { "pyproject.toml": "flask" } }] },
+    "lifecycle": { "adapter": "python" },
+    "requirements": [
+      "node",
+      { "value": "{python}", "when": { "option": "noInstall", "equals": false } },
+      { "value": "git", "when": { "option": "git", "equals": true } }
+    ],
+    "actions": [
+      { "type": "run", "executable": "node", "args": ["{pythonGenerator}", "flask", "{target}"] },
+      {
+        "type": "run",
+        "executable": "{python}",
+        "args": ["-m", "venv", "{venvDirectory}"],
+        "when": { "option": "noInstall", "equals": false }
+      },
+      {
+        "type": "run",
+        "executable": "{projectPython}",
+        "args": ["-m", "pip", "install", "-e", "{target}[dev]"],
+        "when": { "option": "noInstall", "equals": false }
+      },
+      {
+        "type": "run",
+        "executable": "git",
+        "args": ["-C", "{target}", "init"],
+        "when": { "option": "git", "equals": true }
+      }
+    ]
+  }
+]

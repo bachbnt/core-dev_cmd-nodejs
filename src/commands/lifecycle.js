@@ -4,6 +4,7 @@ const path = require('path');
 const { findXcodeContainer } = require('../projects/detect');
 const { getProjectAdapter } = require('../projects/adapters');
 const { createCommand } = require('../runner/command');
+const { buildRecipeLifecycleCommands } = require('../recipes');
 
 function buildLifecycleCommands(action, project, options = {}) {
   return getProjectAdapter(project).build(action, project, options);
@@ -19,6 +20,9 @@ function buildOpenCommands(project, mode, config) {
     const xcode = project.xcode || findXcodeContainer(iosRoot);
     if (!xcode) throw new Error('No Xcode workspace or project was detected.');
     return [createCommand('open', [path.join(iosRoot, xcode.file)])];
+  }
+  if (project.recipe?.lifecycle?.open && !project.recipe.lifecycle.adapter) {
+    return buildRecipeLifecycleCommands(project.recipe, 'open', project, { config });
   }
   return [createCommand(config.editor, [project.root])];
 }

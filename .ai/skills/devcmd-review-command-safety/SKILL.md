@@ -12,12 +12,13 @@ Review untrusted input from parsing through process execution and persisted repl
 ## Review Order
 
 1. Trace inputs through `src/utils/args.js`, handlers, command builders, and `src/runner/`.
-2. Confirm processes use structured `{ executable, args, cwd? }` values and `shell: false`.
-3. Check project names, paths, executable overrides, history entries, and config values before use.
-4. Verify formatting functions are display-only and never become executable input.
-5. Review clean/delete behavior for root escape, symlink, and overbroad deletion risks.
-6. Check missing executable handling, child exit codes, `SIGINT`, and `SIGTERM` forwarding.
-7. Add adversarial tests using metacharacters, whitespace, malformed persisted data, and missing binaries.
+2. Confirm processes use structured `{ executable, args, cwd? }` values and never enable the child-process `shell` option.
+3. Include recipe loading, placeholder resolution, file destinations, copy sources, executable mappings, and user recipe overrides in the input trace.
+4. Check project names, paths, executable overrides, history entries, and config values before use.
+5. Verify formatting functions are display-only and never become executable input.
+6. Review clean/delete behavior for root escape, symlink, and overbroad deletion risks.
+7. Check missing executable handling, child exit codes, `SIGINT`, and `SIGTERM` forwarding.
+8. Add adversarial tests using metacharacters, whitespace, malformed persisted data, unsafe recipes, and missing binaries.
 
 ## Findings
 

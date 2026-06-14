@@ -17,6 +17,7 @@ function parseArgs(argv) {
     noInstall: false,
     python: undefined,
     editor: undefined,
+    values: {},
   };
   const positionals = [];
 
@@ -50,6 +51,16 @@ function parseArgs(argv) {
       if (!options.editor || options.editor.startsWith('-')) {
         throw new Error('--editor requires an application or executable name.');
       }
+    } else if (arg === '--set') {
+      const assignment = args.shift();
+      const separator = assignment?.indexOf('=') ?? -1;
+      if (separator < 1) throw new Error('--set requires name=value.');
+      const name = assignment.slice(0, separator);
+      const value = assignment.slice(separator + 1);
+      if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(name) || !value) {
+        throw new Error('--set requires a valid name and non-empty value.');
+      }
+      options.values[name] = value;
     }
     else if (PACKAGE_MANAGERS.includes(arg.replace(/^--/, ''))) {
       options.packageManager = arg.replace(/^--/, '');
@@ -66,7 +77,7 @@ function parseArgs(argv) {
   return { command, options, positionals };
 }
 
-function validateCommandFlags(command, options) {
+function validateCommandFlags(command, options, definitions = frameworkDefinitions) {
   if (options.coldBoot && command !== 'android') {
     throw new Error('--cold-boot is only supported by the android command.');
   }
@@ -78,14 +89,15 @@ function validateCommandFlags(command, options) {
     options.typescript !== undefined ||
     options.packageManager !== undefined ||
     options.git !== undefined ||
-    options.eslint !== undefined;
-  if (hasPreset && !frameworkDefinitions[command]) {
+    options.eslint !== undefined ||
+    Object.keys(options.values || {}).length > 0;
+  if (hasPreset && !definitions[command]) {
     throw new Error('Project preset options can only be used with framework commands.');
   }
 }
 
-function validateFrameworkOptions(command, options) {
-  const definition = frameworkDefinitions[command];
+function validateFrameworkOptions(command, options, definitions = frameworkDefinitions) {
+  const definition = definitions[command];
   if (!definition) throw new Error(`Unsupported framework: ${command}`);
 
   const capabilities = definition.capabilities;

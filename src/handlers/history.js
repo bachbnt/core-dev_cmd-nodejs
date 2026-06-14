@@ -2,15 +2,15 @@
 
 const { HISTORY_FILE, frameworkDefinitions } = require('../config');
 const { buildAndroidCommands, buildIOSBootCommands, buildIOSShutdownCommands } = require('../commands/devices');
-const { buildFrameworkCommands } = require('../commands/frameworks');
+const { buildFrameworkCommands, builtInRegistry } = require('../commands/frameworks');
 const { getHistoryDisplay, readHistory } = require('../commands/history');
 const { isCommandSequence } = require('../runner/command');
 const { executeCommands } = require('../runtime/execute');
 
-function rebuildHistoryCommands(entry) {
+function rebuildHistoryCommands(entry, registry = builtInRegistry, definitions = frameworkDefinitions) {
   if (isCommandSequence(entry.commands)) return entry.commands;
-  if (frameworkDefinitions[entry.command] && entry.target) {
-    return buildFrameworkCommands(entry.command, entry.target, entry.options || {});
+  if (definitions[entry.command] && entry.target) {
+    return buildFrameworkCommands(entry.command, entry.target, entry.options || {}, registry);
   }
   if (entry.command === 'android' && entry.target) return buildAndroidCommands(entry.target, entry.options || {});
   if (entry.command === 'ios' && entry.action === 'shutdown-all') return buildIOSShutdownCommands();
@@ -40,7 +40,11 @@ function handleAgain(context) {
   return executeCommands(
     p,
     pc,
-    rebuildHistoryCommands(latest),
+    rebuildHistoryCommands(
+      latest,
+      context.recipeRegistry || builtInRegistry,
+      context.frameworkDefinitions || frameworkDefinitions
+    ),
     { command: 'again', source: latest.command },
     options
   );

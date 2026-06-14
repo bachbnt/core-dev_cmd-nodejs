@@ -36,11 +36,17 @@ test('recent projects are deduplicated and ordered by latest use', () => {
 });
 
 test('completion generators include lifecycle and framework commands', () => {
-  assert.match(getCompletion('zsh'), /doctor/);
-  assert.match(getCompletion('zsh'), /inspect/);
-  assert.match(getCompletion('zsh'), /check/);
-  assert.match(getCompletion('zsh'), /fastapi/);
-  assert.match(getCompletion('bash'), /complete -F _devcmd_completion dev/);
+  const zsh = getCompletion('zsh');
+  const bash = getCompletion('bash');
+  assert.match(zsh, /doctor/);
+  assert.match(zsh, /inspect/);
+  assert.match(zsh, /check/);
+  assert.match(zsh, /fastapi/);
+  assert.match(zsh, /react_native_cli/);
+  assert.match(zsh, /recipes/);
+  assert.match(zsh, /#compdef dev devcmd/);
+  assert.match(zsh, /compdef _devcmd dev devcmd/);
+  assert.match(bash, /complete -F _devcmd_completion dev devcmd/);
   assert.throws(() => getCompletion('fish'), /supports/);
 });
 

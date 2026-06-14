@@ -1,9 +1,10 @@
 // Copyright (c) 2026 bachbnt
 
-const { CONFIG_FILE, PROJECTS_FILE, frameworkDefinitions } = require('../config');
+const { CONFIG_FILE, PROJECTS_FILE, RECIPES_DIR, frameworkDefinitions } = require('../config');
 const { setConfigValue } = require('../config/user');
 const { getExistingProjects } = require('../projects/recent');
 const { checkTools } = require('../runner/check');
+const { loadRecipeFile } = require('../recipes');
 
 function printConfig(p, config) {
   p.note(JSON.stringify(config, null, 2), `Config: ${CONFIG_FILE}`);
@@ -53,9 +54,13 @@ function handleProjects(context) {
 
 function handleInfo(context) {
   const { p, pc } = context;
+  const definitions = context.frameworkDefinitions || frameworkDefinitions;
   p.note(
-    Object.entries(frameworkDefinitions)
-      .map(([name, definition]) => `${pc.bold(name)}: ${definition.description}`)
+    Object.entries(definitions)
+      .map(([name, definition]) => {
+        const source = definition.source === 'user' ? ' [user recipe]' : '';
+        return `${pc.bold(name)}: ${definition.description}${source}`;
+      })
       .join('\n'),
     'Supported frameworks'
   );
@@ -63,10 +68,30 @@ function handleInfo(context) {
   return 0;
 }
 
+function handleRecipes(context) {
+  const { p, positionals, recipeRegistry } = context;
+  if (positionals.length === 0 || (positionals[0] === 'list' && positionals.length === 1)) {
+    const lines = [...recipeRegistry.values()].map(
+      (recipe) => `${recipe.name.padEnd(20)} [${recipe.source}] ${recipe.description}`
+    );
+    p.note(lines.join('\n'), 'Available recipes');
+    p.outro(`User recipe directory: ${RECIPES_DIR}`);
+    return 0;
+  }
+  if (positionals[0] === 'validate' && positionals.length === 2) {
+    const recipes = loadRecipeFile(positionals[1], 'user');
+    p.note(recipes.map((recipe) => `${recipe.name}: ${recipe.description}`).join('\n'), 'Valid recipes');
+    p.outro(`${recipes.length} recipe(s) validated.`);
+    return 0;
+  }
+  throw new Error('Usage: dev recipes [list] or dev recipes validate <file>');
+}
+
 module.exports = {
   handleConfig,
   handleDoctor,
   handleInfo,
   handleProjects,
+  handleRecipes,
   printConfig,
 };

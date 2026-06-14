@@ -40,7 +40,7 @@ test('framework Git initialization is a separate process', () => {
   ]);
 });
 
-test('React Native defaults to Expo and bare mode stays explicit', () => {
+test('React Native defaults to Expo and Community CLI stays explicit', () => {
   assert.deepEqual(
     buildFrameworkCommands('react_native', 'mobile', {
       packageManager: 'pnpm',
@@ -55,7 +55,7 @@ test('React Native defaults to Expo and bare mode stays explicit', () => {
     ]
   );
   assert.deepEqual(
-    buildFrameworkCommands('react_native_bare', 'NativeApp', {
+    buildFrameworkCommands('react_native_cli', 'NativeApp', {
       packageManager: 'bun',
       git: false,
     }),

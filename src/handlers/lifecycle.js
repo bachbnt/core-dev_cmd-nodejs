@@ -26,7 +26,7 @@ function resolveLifecycleTarget(command, positionals) {
 async function handleLifecycle(context) {
   const { p, pc, command, positionals, options, config } = context;
   const { projectPath, openMode } = resolveLifecycleTarget(command, positionals);
-  const project = detectProject(projectPath);
+  const project = detectProject(projectPath, { registry: context.recipeRegistry });
   const commands = command === 'open'
     ? buildOpenCommands(project, openMode, { ...config, editor: options.editor || config.editor })
     : buildLifecycleCommands(command, project, { config });
@@ -42,7 +42,10 @@ async function handleLifecycle(context) {
 function handleInspect(context) {
   const { p, positionals, config } = context;
   if (positionals.length > 1) throw new Error('Usage: dev inspect [path]');
-  const inspection = inspectProject(detectProject(positionals[0] || process.cwd()), config);
+  const inspection = inspectProject(
+    detectProject(positionals[0] || process.cwd(), { registry: context.recipeRegistry }),
+    config
+  );
   const lines = [
     `Name: ${inspection.name}`,
     `Type: ${inspection.type}`,
@@ -50,6 +53,7 @@ function handleInspect(context) {
   ];
   if (inspection.packageManager) lines.push(`Package manager: ${inspection.packageManager}`);
   if (inspection.xcode) lines.push(`Xcode: ${inspection.xcode.kind} ${inspection.xcode.file}`);
+  if (inspection.recipeSource) lines.push(`Recipe: ${inspection.recipeSource}`);
   lines.push('');
   for (const action of inspection.actions) {
     lines.push(

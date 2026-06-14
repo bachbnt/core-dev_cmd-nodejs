@@ -2,6 +2,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const { loadRecipeRegistry } = require('../recipes');
+
+const builtInRegistry = loadRecipeRegistry({ includeUser: false });
 
 function exists(root, name, fsImpl = fs) {
   return fsImpl.existsSync(path.join(root, name));
@@ -26,11 +29,42 @@ function detectNodeType(packageJson) {
   if (dependencies.nuxt) return 'nuxt';
   if (dependencies['@nestjs/core']) return 'nest';
   if (dependencies.expo) return 'react_native';
-  if (dependencies['react-native']) return 'react_native_bare';
+  if (dependencies['react-native']) return 'react_native_cli';
   if (dependencies.vue) return 'vue';
   if (dependencies.react) return 'react';
   if (dependencies.express) return 'express';
   return 'node';
+}
+
+function readText(root, file, fsImpl = fs) {
+  try {
+    return fsImpl.readFileSync(path.join(root, file), 'utf8').toLowerCase();
+  } catch (error) {
+    return undefined;
+  }
+}
+
+function recipeRuleMatches(root, rule, packageJson, fsImpl = fs) {
+  if (rule.files && !rule.files.every((file) => exists(root, file, fsImpl))) return false;
+  if (rule.dependencies) {
+    if (!packageJson) return false;
+    const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+    if (!rule.dependencies.every((name) => dependencies[name])) return false;
+  }
+  if (rule.contains && !Object.entries(rule.contains).every(([file, text]) => {
+    const content = readText(root, file, fsImpl);
+    return content !== undefined && content.includes(text.toLowerCase());
+  })) return false;
+  return true;
+}
+
+function detectRecipeAtRoot(root, registry, packageJson, fsImpl = fs) {
+  const candidates = [...registry.values()]
+    .filter((recipe) => recipe.detect)
+    .sort((left, right) => (right.detect.priority || 0) - (left.detect.priority || 0));
+  return candidates.find((recipe) =>
+    recipe.detect.rules.some((rule) => recipeRuleMatches(root, rule, packageJson, fsImpl))
+  );
 }
 
 function readPyproject(root, fsImpl = fs) {
@@ -54,20 +88,36 @@ function findXcodeContainer(root, fsImpl = fs) {
   return undefined;
 }
 
-function detectAtRoot(root, fsImpl = fs) {
-  if (exists(root, 'package.json', fsImpl)) {
-    const packageJson = readJson(path.join(root, 'package.json'), fsImpl);
+function detectAtRoot(root, fsImpl = fs, registry = builtInRegistry) {
+  const packageJson = exists(root, 'package.json', fsImpl)
+    ? readJson(path.join(root, 'package.json'), fsImpl)
+    : undefined;
+  const recipe = detectRecipeAtRoot(root, registry, packageJson, fsImpl);
+  if (recipe) {
     return {
-      type: detectNodeType(packageJson),
+      type: recipe.name,
+      name: packageJson?.name || path.basename(root),
+      root,
+      packageJson,
+      packageManager: packageJson ? detectPackageManager(root, packageJson, fsImpl) : undefined,
+      recipe,
+    };
+  }
+
+  if (packageJson) {
+    const type = detectNodeType(packageJson);
+    return {
+      type,
       name: packageJson.name || path.basename(root),
       root,
       packageJson,
       packageManager: detectPackageManager(root, packageJson, fsImpl),
+      recipe: registry.get(type),
     };
   }
 
   if (exists(root, 'pubspec.yaml', fsImpl)) {
-    return { type: 'flutter', name: path.basename(root), root };
+    return { type: 'flutter', name: path.basename(root), root, recipe: registry.get('flutter') };
   }
 
   if (exists(root, 'gradlew', fsImpl) || exists(root, 'gradlew.bat', fsImpl)) {
@@ -78,7 +128,7 @@ function detectAtRoot(root, fsImpl = fs) {
   if (xcode) return { type: 'ios', name: path.basename(root), root, xcode };
 
   if (exists(root, 'manage.py', fsImpl)) {
-    return { type: 'django', name: path.basename(root), root };
+    return { type: 'django', name: path.basename(root), root, recipe: registry.get('django') };
   }
 
   if (exists(root, 'pyproject.toml', fsImpl)) {
@@ -87,7 +137,7 @@ function detectAtRoot(root, fsImpl = fs) {
     if (/\bfastapi(?:\[|[<>=\s"])/.test(pyproject)) type = 'fastapi';
     else if (/\bflask(?:[<>=\s"])/.test(pyproject)) type = 'flask';
     else if (/\bdjango(?:[<>=\s"])/.test(pyproject)) type = 'django';
-    return { type, name: path.basename(root), root };
+    return { type, name: path.basename(root), root, recipe: registry.get(type) };
   }
 
   return undefined;
@@ -95,6 +145,7 @@ function detectAtRoot(root, fsImpl = fs) {
 
 function detectProject(start = process.cwd(), options = {}) {
   const fsImpl = options.fsImpl || fs;
+  const registry = options.registry || builtInRegistry;
   let current = path.resolve(start);
   try {
     if (!fsImpl.statSync(current).isDirectory()) current = path.dirname(current);
@@ -103,7 +154,7 @@ function detectProject(start = process.cwd(), options = {}) {
   }
 
   while (true) {
-    const project = detectAtRoot(current, fsImpl);
+    const project = detectAtRoot(current, fsImpl, registry);
     if (project) return project;
     const parent = path.dirname(current);
     if (parent === current) break;
@@ -114,8 +165,10 @@ function detectProject(start = process.cwd(), options = {}) {
 
 module.exports = {
   detectAtRoot,
+  detectRecipeAtRoot,
   detectNodeType,
   detectPackageManager,
   detectProject,
   findXcodeContainer,
+  recipeRuleMatches,
 };

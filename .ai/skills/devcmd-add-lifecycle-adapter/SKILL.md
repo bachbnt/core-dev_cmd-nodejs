@@ -11,9 +11,9 @@ Implement detection and lifecycle actions through the shared project adapter arc
 
 ## Workflow
 
-1. Inspect `src/projects/detect.js`, `src/projects/adapters/`, `src/commands/inspect.js`, and lifecycle tests.
-2. Define reliable marker files, root selection, framework identity, and package-manager detection.
-3. Add an adapter that resolves supported actions to `{ executable, args, cwd? }` commands.
+1. Inspect `src/recipes/schema.js`, `src/recipes/engine.js`, `src/projects/detect.js`, `src/projects/adapters/`, inspection, and lifecycle tests.
+2. Prefer recipe detection rules and lifecycle actions for custom project types; use a named adapter only for shared behavior that cannot remain declarative.
+3. Resolve declarative recipe actions through the recipe engine and named adapter actions through the shared adapter registry; both must produce `{ executable, args, cwd? }` commands.
 4. Return an explicit unsupported reason for unavailable actions instead of inventing a fallback.
 5. Register the adapter once so inspect and execution resolve through the same implementation.
 6. Add fixtures covering detection from both the project root and a child directory.

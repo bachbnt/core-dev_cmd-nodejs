@@ -2,12 +2,17 @@
 
 const path = require('path');
 const { PACKAGE_MANAGERS, frameworkDefinitions } = require('../config');
-const { buildFrameworkCommands, getFrameworkRequirements } = require('../commands/frameworks');
+const {
+  buildFrameworkCommands,
+  builtInRegistry,
+  getFrameworkRequirements,
+  getRecipe,
+} = require('../commands/frameworks');
 const { executeCommands } = require('../runtime/execute');
 const { validateFrameworkOptions, validateProjectName } = require('../utils/args');
 
-function applyConfigDefaults(command, options, config) {
-  const capabilities = frameworkDefinitions[command].capabilities;
+function applyConfigDefaults(command, options, config, definitions = frameworkDefinitions) {
+  const capabilities = definitions[command].capabilities;
   if (capabilities.packageManager && !options.packageManager) {
     const supported = Array.isArray(capabilities.packageManager)
       ? capabilities.packageManager
@@ -20,8 +25,15 @@ function applyConfigDefaults(command, options, config) {
   if (capabilities.python && !options.python) options.python = config.python;
 }
 
-async function promptFrameworkOptions(p, command, options, config) {
-  const capabilities = frameworkDefinitions[command].capabilities;
+async function promptFrameworkOptions(
+  p,
+  command,
+  options,
+  config,
+  definitions = frameworkDefinitions,
+  recipe = builtInRegistry.get(command)
+) {
+  const capabilities = definitions[command].capabilities;
   const unwrap = (value) => (p.isCancel(value) ? undefined : value);
 
   if (capabilities.language && options.typescript === undefined) {
@@ -50,11 +62,27 @@ async function promptFrameworkOptions(p, command, options, config) {
     options.eslint = unwrap(await p.confirm({ message: 'Include ESLint?', initialValue: true }));
     if (options.eslint === undefined) return false;
   }
+  options.values ||= {};
+  for (const [name, input] of Object.entries(recipe?.inputs || {})) {
+    if (options.values[name] !== undefined || input.default !== undefined || !input.required) continue;
+    const value = unwrap(await p.text({
+      message: input.description || `Enter ${name}:`,
+      validate(candidate) {
+        if (!candidate?.trim()) return `${name} is required.`;
+        return undefined;
+      },
+    }));
+    if (!value) return false;
+    options.values[name] = value;
+  }
   return true;
 }
 
 async function handleScaffold(context) {
   const { p, pc, command, positionals, options, config } = context;
+  const definitions = context.frameworkDefinitions || frameworkDefinitions;
+  const recipeRegistry = context.recipeRegistry || builtInRegistry;
+  const recipe = getRecipe(command, recipeRegistry);
   if (positionals.length > 1) throw new Error(`Unexpected argument: ${positionals[1]}`);
 
   const interactive = !options.target;
@@ -79,14 +107,21 @@ async function handleScaffold(context) {
   }
 
   validateProjectName(target);
-  if (interactive && !(await promptFrameworkOptions(p, command, options, config))) {
+  if (interactive && !(await promptFrameworkOptions(
+    p,
+    command,
+    options,
+    config,
+    definitions,
+    recipe
+  ))) {
     p.cancel('Operation cancelled.');
     return 130;
   }
-  applyConfigDefaults(command, options, config);
-  validateFrameworkOptions(command, options);
+  applyConfigDefaults(command, options, config, definitions);
+  validateFrameworkOptions(command, options, definitions);
 
-  const commands = buildFrameworkCommands(command, target, options);
+  const commands = buildFrameworkCommands(command, target, options, recipeRegistry);
   return executeCommands(p, pc, commands, {
     command,
     target,
@@ -94,7 +129,11 @@ async function handleScaffold(context) {
     projectName: target,
     projectPath: path.resolve(target),
     projectType: command,
-  }, { ...options, requirements: getFrameworkRequirements(command, options) });
+    recipeSource: recipe.source,
+  }, {
+    ...options,
+    requirements: getFrameworkRequirements(command, options, recipeRegistry, target),
+  });
 }
 
 module.exports = {

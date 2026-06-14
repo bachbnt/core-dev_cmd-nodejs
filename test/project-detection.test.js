@@ -27,6 +27,16 @@ test('detectProject detects Node framework and package manager from a child dire
   assert.equal(project.root, root);
 });
 
+test('detectProject identifies React Native Community CLI projects', () => {
+  const root = fixture();
+  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({
+    name: 'native-app',
+    dependencies: { react: '^19.0.0', 'react-native': '^0.80.0' },
+  }));
+
+  assert.equal(detectProject(root).type, 'react_native_cli');
+});
+
 test('detectProject detects Python frameworks', () => {
   const fastapi = fixture();
   fs.writeFileSync(path.join(fastapi, 'pyproject.toml'), 'dependencies = ["fastapi>=0.115"]');

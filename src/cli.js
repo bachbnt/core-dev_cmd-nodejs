@@ -7,18 +7,25 @@ const { handleDeviceCommand, handleDeviceList } = require('./handlers/devices');
 const { handleAgain, handleHistory, rebuildHistoryCommands } = require('./handlers/history');
 const { LIFECYCLE_COMMANDS, handleInspect, handleLifecycle } = require('./handlers/lifecycle');
 const { applyConfigDefaults, handleScaffold } = require('./handlers/scaffold');
-const { handleConfig, handleDoctor, handleInfo, handleProjects } = require('./handlers/system');
+const {
+  handleConfig,
+  handleDoctor,
+  handleInfo,
+  handleProjects,
+  handleRecipes,
+} = require('./handlers/system');
 const { describeFailure, executeCommands } = require('./runtime/execute');
 const { parseArgs, validateCommandFlags } = require('./utils/args');
+const { getRecipeDefinitions, loadRecipeRegistry } = require('./recipes');
 
-function printHelp(pc) {
+function printHelp(pc, definitions = frameworkDefinitions) {
   console.log(
     `\n${pc.bgCyan(pc.black(` ${BRAND} v${VERSION} `))} ${pc.bold('Development toolkit by bachbnt')}\n`
   );
   console.log(pc.bold('Usage:'));
   console.log('  dev <command> [target] [options]\n');
   console.log(pc.bold('Frameworks:'));
-  for (const [name, definition] of Object.entries(frameworkDefinitions)) {
+  for (const [name, definition] of Object.entries(definitions)) {
     console.log(`  ${pc.green(name.padEnd(20))} ${pc.dim(definition.description)}`);
   }
   console.log(`\n${pc.bold('Project Lifecycle:')}`);
@@ -28,6 +35,7 @@ function printHelp(pc) {
     console.log(`  ${pc.magenta(action.padEnd(16))} ${pc.dim(`${action} the detected project`)}`);
   }
   console.log(`  ${pc.magenta('projects'.padEnd(16))} ${pc.dim('Show recently used projects')}`);
+  console.log(`  ${pc.magenta('recipes'.padEnd(16))} ${pc.dim('List or validate framework recipes')}`);
   console.log(`  ${pc.magenta('config'.padEnd(16))} ${pc.dim('Show or update DevCmd defaults')}`);
   console.log(`  ${pc.magenta('completion'.padEnd(16))} ${pc.dim('Generate bash or zsh completion')}`);
   console.log(`\n${pc.bold('Devices:')}`);
@@ -45,6 +53,7 @@ function printHelp(pc) {
   console.log('  --eslint, --no-eslint      Toggle ESLint where supported');
   console.log('  --no-install               Scaffold without installing dependencies');
   console.log('  --python <executable>      Select Python executable');
+  console.log('  --set <name=value>         Set a custom recipe input');
   console.log('  --editor <executable>      Override editor for dev open');
   console.log('  --cold-boot                Cold boot Android emulator');
   console.log('  --shutdown-all             Shutdown all iOS simulators\n');
@@ -52,9 +61,11 @@ function printHelp(pc) {
 
 async function dispatch(context) {
   const { command } = context;
+  const definitions = context.frameworkDefinitions || frameworkDefinitions;
   if (command === 'config') return handleConfig(context);
   if (command === 'doctor') return handleDoctor(context);
   if (command === 'projects') return handleProjects(context);
+  if (command === 'recipes') return handleRecipes(context);
   if (command === 'inspect') return handleInspect(context);
   if (LIFECYCLE_COMMANDS.includes(command)) return handleLifecycle(context);
   if (command === 'info') return handleInfo(context);
@@ -62,7 +73,7 @@ async function dispatch(context) {
   if (command === 'again') return handleAgain(context);
   if (command === 'devices') return handleDeviceList(context);
   if (command === 'android' || command === 'ios') return handleDeviceCommand(context);
-  if (frameworkDefinitions[command]) return handleScaffold(context);
+  if (definitions[command]) return handleScaffold(context);
   throw new Error(`Unsupported command: ${command}. Run dev help to see available commands.`);
 }
 
@@ -70,6 +81,8 @@ async function main(argv) {
   const p = await import('@clack/prompts');
   const pc = (await import('picocolors')).default;
   let parsed;
+  let recipeRegistry;
+  let definitions;
 
   try {
     parsed = parseArgs(argv);
@@ -79,14 +92,25 @@ async function main(argv) {
   }
 
   const { command, options, positionals } = parsed;
+  try {
+    const validatingRecipe = command === 'recipes' && positionals[0] === 'validate';
+    recipeRegistry = loadRecipeRegistry({ includeUser: !validatingRecipe });
+    definitions = getRecipeDefinitions(recipeRegistry);
+  } catch (error) {
+    p.log.error(error.message);
+    return 1;
+  }
   if (!command || ['help', '-h', '--help'].includes(command)) {
-    printHelp(pc);
+    printHelp(pc, definitions);
     return command ? 0 : 1;
   }
 
   if (command === 'completion') {
     try {
-      process.stdout.write(getCompletion(positionals[0] || process.env.SHELL?.split('/').pop() || 'zsh'));
+      process.stdout.write(getCompletion(
+        positionals[0] || process.env.SHELL?.split('/').pop() || 'zsh',
+        definitions
+      ));
       return 0;
     } catch (error) {
       p.log.error(error.message);
@@ -95,10 +119,19 @@ async function main(argv) {
   }
 
   try {
-    validateCommandFlags(command, options);
+    validateCommandFlags(command, options, definitions);
     const config = loadConfig();
     p.intro(`${pc.bgCyan(pc.black(` ${BRAND} `))} ${pc.bold(command)}`);
-    return await dispatch({ p, pc, command, options, positionals, config });
+    return await dispatch({
+      p,
+      pc,
+      command,
+      options,
+      positionals,
+      config,
+      frameworkDefinitions: definitions,
+      recipeRegistry,
+    });
   } catch (error) {
     p.log.error(error.message);
     return 1;
