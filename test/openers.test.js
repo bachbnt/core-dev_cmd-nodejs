@@ -135,3 +135,19 @@ test('external opener validation ignores a broken installed opener', () => {
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /fleet/);
 });
+
+test('CLI help lists built-in and custom openers with aliases', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'devcmd-opener-help-home-'));
+  const directory = path.join(home, '.devcmd', 'openers');
+  fs.mkdirSync(directory, { recursive: true });
+  fs.writeFileSync(path.join(directory, 'fleet.json'), JSON.stringify(customOpener()));
+
+  const result = spawnSync(process.execPath, [path.join(__dirname, '..', 'dev'), 'help'], {
+    encoding: 'utf8',
+    env: { ...process.env, HOME: home },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Openers:/);
+  assert.match(result.stdout, /android_studio.*Android Studio native project \(android\)/);
+  assert.match(result.stdout, /fleet.*Custom Fleet opener.*\[user\]/);
+});

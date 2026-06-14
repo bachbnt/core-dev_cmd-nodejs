@@ -41,6 +41,14 @@ function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   console.log(`  ${pc.magenta('openers'.padEnd(16))} ${pc.dim('List or validate project openers')}`);
   console.log(`  ${pc.magenta('config'.padEnd(16))} ${pc.dim('Show or update DevCmd defaults')}`);
   console.log(`  ${pc.magenta('completion'.padEnd(16))} ${pc.dim('Generate bash or zsh completion')}`);
+  console.log(`\n${pc.bold('Openers:')}`);
+  for (const opener of openerRegistry?.values() || []) {
+    const aliases = opener.aliases?.length ? ` (${opener.aliases.join(', ')})` : '';
+    const source = opener.source === 'user' ? ' [user]' : '';
+    console.log(
+      `  ${pc.cyan(opener.name.padEnd(20))} ${pc.dim(`${opener.description}${aliases}${source}`)}`
+    );
+  }
   console.log(`\n${pc.bold('Devices:')}`);
   console.log(`  ${pc.blue('devices'.padEnd(16))} ${pc.dim('List Android and iOS devices')}`);
   console.log(`  ${pc.blue('android'.padEnd(16))} ${pc.dim('Boot Android emulator')}`);
