@@ -2,6 +2,8 @@
 
 DevCmd is an interactive development CLI for scaffolding projects, detecting existing projects, running common lifecycle tasks, and managing Android emulators and iOS simulators.
 
+[Download the latest DevCmd release](https://github.com/bachbnt/dev-cmd/releases/latest) | [View all releases](https://github.com/bachbnt/dev-cmd/releases)
+
 ## Features
 
 - Scaffold JavaScript, mobile, and Python web projects with framework-appropriate defaults.
@@ -20,38 +22,75 @@ DevCmd is an interactive development CLI for scaffolding projects, detecting exi
 
 ## Requirements
 
-- Node.js 20.19 or newer is recommended for current Vite and Vue tooling.
-- Android Studio and the `emulator`/`adb` commands for Android features.
-- Xcode and `xcrun simctl` for iOS features.
-- The SDK or CLI required by the framework you want to scaffold.
+- Node.js 20.19 or newer, including npm.
+- Android Studio is only required for Android emulator features.
+- Xcode is only required for iOS simulator features.
+- Framework SDKs are only required for the frameworks you use, such as Flutter or Python.
 
 ## Installation
 
-Install directly from GitHub without cloning the repository:
+### Download
+
+Open the latest GitHub Release to view release notes and downloadable source archives:
+
+[Download the latest release](https://github.com/bachbnt/dev-cmd/releases/latest)
+
+Downloading an archive does not install the CLI automatically. Until a signed macOS installer is provided, use the npm command below for installation. It downloads DevCmd directly and does not clone the repository.
+
+### Quick install
+
+Install the latest DevCmd source directly from GitHub. This downloads a tarball through npm, so it does not clone the repository and does not require Git:
 
 ```bash
-npm install --global github:bachbnt/dev-cmd
+npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/heads/main.tar.gz
 ```
 
-Verify the installation:
+The installation provides both `dev` and `devcmd`. Verify the CLI and inspect the tools available on your machine:
 
 ```bash
 dev help
-# or
+dev doctor
+```
+
+You can use the full command name if `dev` conflicts with another executable:
+
+```bash
 devcmd help
 ```
 
-Run the same install command again to update to the latest commit on the default branch. To uninstall DevCmd:
+No repository checkout, `chmod`, `npm link`, or shell `source` command is needed.
+
+### Install a specific release
+
+Pin installation to a GitHub release tag for reproducible setup:
+
+```bash
+npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.3.0.tar.gz
+```
+
+Available versions are listed on the [GitHub Releases](https://github.com/bachbnt/dev-cmd/releases) page.
+
+### Update or uninstall
+
+Run the quick-install command again to update to the latest `main` version. To remove DevCmd:
 
 ```bash
 npm uninstall --global devcmd
 ```
 
-When using NVM, global npm packages belong to the active Node.js version. Install DevCmd once for each Node.js version where you want to use it.
+When using NVM, global npm packages belong to the active Node.js version. Install DevCmd once for each Node.js version where it should be available. If the command is not found immediately after installation, open a new terminal and check the active npm prefix with `npm config get prefix`.
 
-### Local development
+### Alternative GitHub install
 
-Clone the repository, then run the reusable setup script:
+If Git is installed, npm also accepts the shorter GitHub package syntax:
+
+```bash
+npm install --global github:bachbnt/dev-cmd
+```
+
+### Local development only
+
+Cloning is only needed when contributing to DevCmd itself. Clone the repository, then run the reusable setup script:
 
 ```bash
 git clone https://github.com/bachbnt/dev-cmd.git
@@ -356,4 +395,16 @@ AGENTS.md                   Independent Codex instructions
 CLAUDE.md                   Independent Claude Code instructions
 ```
 
-`AGENTS.md` and `CLAUDE.md` do not import or reference each other. Each agent has independent project instructions, while both discovery directories point to `.ai/skills` so Claude Code and Codex use the same canonical skill content. The initial `devcmd-add-framework` skill guides agents through adding framework support, validating official scaffolders, preserving shell-safe command execution, updating tests, and documenting the command.
+`AGENTS.md` and `CLAUDE.md` do not import or reference each other. Each agent has independent project instructions, while both discovery directories point to `.ai/skills` so Claude Code and Codex use the same canonical skill content.
+
+Each skill uses a portable `SKILL.md` as its required entrypoint. Vendor-specific UI metadata is intentionally omitted so the same skill directories remain neutral between Claude Code and Codex.
+
+| Skill | Purpose |
+| --- | --- |
+| `devcmd-add-framework` | Add framework scaffolding end to end using current official practices. |
+| `devcmd-add-lifecycle-adapter` | Add project detection and lifecycle command resolution. |
+| `devcmd-review-command-safety` | Audit input validation, child processes, history, and cleanup safety. |
+| `devcmd-add-device-provider` | Extend device discovery and control without requiring real devices in tests. |
+| `devcmd-debug-cli` | Reproduce, classify, fix, and regression-test CLI failures. |
+| `devcmd-release-check` | Validate versioning, packaging, tags, installation, and GitHub releases. |
+| `devcmd-update-docs` | Keep README, help, completion, examples, and installation guidance aligned. |

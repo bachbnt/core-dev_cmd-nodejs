@@ -11,13 +11,14 @@ Implement framework support across the complete CLI surface while preserving Dev
 
 ## Workflow
 
-1. Read `references/framework-checklist.md` and inspect the files it names.
-2. Check the framework's current official documentation before choosing a scaffolder or flags. Prefer an official, non-deprecated project generator.
-3. Define the command name, defaults, supported capabilities, required executables, and `--no-install` behavior.
-4. Build every process with `createCommand(executable, args)`. Keep executable and arguments separate; never introduce `shell: true` or shell command strings.
-5. Update configuration, command construction, validation, interactive prompts, help, completion, and README where applicable.
-6. Add focused tests for the exact executable and argument array, option validation, requirements, and completion visibility.
-7. Run `npm test`, `git diff --check`, and at least one representative `dev <framework> <target> --dry-run` command.
+1. Inspect `src/config/index.js`, `src/commands/frameworks.js`, `src/handlers/scaffold.js`, `src/utils/args.js`, completion, tests, and README.
+2. Check current official framework documentation before choosing a scaffolder or flags. Prefer an official, maintained, non-deprecated generator.
+3. Determine whether generation is interactive, which flags make it deterministic, supported package managers, language choices, Git behavior, install skipping, and required executables.
+4. Define the command description and capabilities in the shared framework configuration.
+5. Build every process with `createCommand(executable, args)`. Keep executable and arguments separate.
+6. Update validation, config defaults, interactive prompts, requirements, help, completion, and README where applicable.
+7. Add focused tests for exact executable and argument arrays, supported and rejected options, requirements, and completion visibility.
+8. Determine whether generated projects also require new detection or lifecycle adapter support.
 
 ## Guardrails
 
@@ -25,9 +26,10 @@ Implement framework support across the complete CLI surface while preserving Dev
 - Do not execute a real scaffold during tests.
 - Preserve user changes and avoid unrelated refactors.
 - Keep project names validated before they reach a child process.
+- Never introduce `shell: true`, command chaining, or interpolated shell strings.
 - Add `// Copyright (c) 2026 bachbnt` at the beginning of new JavaScript files.
 - Report any difference between the official recommendation and DevCmd's chosen behavior.
 
-## Completion Criteria
+## Verify
 
-Finish only when the framework appears in help and completion, rejects unsupported options, produces a safe command sequence, has tests, and is documented.
+Run `npm test`, `dev <framework> example-app --dry-run`, and `git diff --check`. Confirm the framework appears in help and completion, rejects unsupported options, produces a safe command sequence, has tests, and is documented.
