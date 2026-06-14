@@ -12,6 +12,7 @@ DevCmd is a CommonJS Node.js CLI. It scaffolds projects and runs development lif
 - Keep process execution as `{ executable, args, cwd? }`; never enable a shell or concatenate user input into command strings.
 - Use built-in recipes as the source of framework capabilities and `package.json` as the source of the CLI version.
 - Implement framework scaffolding through `src/recipes/built-ins.json` and the recipe engine; do not add framework-specific branches to CLI handlers.
+- Implement project opening through `src/openers/built-ins.json` and the opener engine; preserve `android` and `ios` aliases.
 - Follow existing handlers, project adapters, and runner APIs instead of adding parallel execution paths.
 - Add `// Copyright (c) 2026 bachbnt` at the beginning of new JavaScript files.
 - Keep changes scoped and preserve unrelated working-tree changes.

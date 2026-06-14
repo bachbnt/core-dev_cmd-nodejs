@@ -1,10 +1,11 @@
 // Copyright (c) 2026 bachbnt
 
-const { CONFIG_FILE, PROJECTS_FILE, RECIPES_DIR, frameworkDefinitions } = require('../config');
+const { CONFIG_FILE, OPENERS_DIR, PROJECTS_FILE, RECIPES_DIR, frameworkDefinitions } = require('../config');
 const { setConfigValue } = require('../config/user');
 const { getExistingProjects } = require('../projects/recent');
 const { checkTools } = require('../runner/check');
 const { loadRecipeFile } = require('../recipes');
+const { loadOpenerFile } = require('../openers');
 
 function printConfig(p, config) {
   p.note(JSON.stringify(config, null, 2), `Config: ${CONFIG_FILE}`);
@@ -87,10 +88,31 @@ function handleRecipes(context) {
   throw new Error('Usage: dev recipes [list] or dev recipes validate <file>');
 }
 
+function handleOpeners(context) {
+  const { p, positionals, openerRegistry } = context;
+  if (positionals.length === 0 || (positionals[0] === 'list' && positionals.length === 1)) {
+    const lines = [...openerRegistry.values()].map((opener) => {
+      const aliases = opener.aliases?.length ? ` aliases: ${opener.aliases.join(', ')}` : '';
+      return `${opener.name.padEnd(20)} [${opener.source}] ${opener.description}${aliases}`;
+    });
+    p.note(lines.join('\n'), 'Available openers');
+    p.outro(`User opener directory: ${OPENERS_DIR}`);
+    return 0;
+  }
+  if (positionals[0] === 'validate' && positionals.length === 2) {
+    const openers = loadOpenerFile(positionals[1], 'user');
+    p.note(openers.map((opener) => `${opener.name}: ${opener.description}`).join('\n'), 'Valid openers');
+    p.outro(`${openers.length} opener(s) validated.`);
+    return 0;
+  }
+  throw new Error('Usage: dev openers [list] or dev openers validate <file>');
+}
+
 module.exports = {
   handleConfig,
   handleDoctor,
   handleInfo,
+  handleOpeners,
   handleProjects,
   handleRecipes,
   printConfig,

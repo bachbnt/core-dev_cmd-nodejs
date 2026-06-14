@@ -129,6 +129,19 @@ test('open supports configured editor and platform applications', () => {
   }
 });
 
+test('open uses the configured built-in opener', () => {
+  const command = buildOpenCommands(nodeProject, undefined, { opener: 'vscode' })[0];
+  if (process.platform === 'darwin') {
+    assert.deepEqual(command, {
+      executable: 'open',
+      args: ['-a', 'Visual Studio Code', '/tmp/site'],
+    });
+  } else {
+    assert.equal(command.executable, 'code');
+    assert.deepEqual(command.args, ['/tmp/site']);
+  }
+});
+
 test('open ios finds a React Native Xcode workspace in the ios directory', () => {
   const fs = require('node:fs');
   const os = require('node:os');

@@ -24,6 +24,8 @@ test('parseArgs reads target and project presets', () => {
     noInstall: false,
     python: undefined,
     editor: undefined,
+    opener: undefined,
+    list: false,
     values: {},
   });
   assert.deepEqual(result.positionals, ['my-app']);
@@ -45,12 +47,15 @@ test('parseArgs reads install, Python, and editor options', () => {
   assert.equal(parseArgs(['fastapi', 'api', '--no-install']).options.noInstall, true);
   assert.equal(parseArgs(['django', 'app', '--python', 'python3.13']).options.python, 'python3.13');
   assert.equal(parseArgs(['open', '--editor', 'cursor']).options.editor, 'cursor');
+  assert.equal(parseArgs(['open', './app', '--with', 'pycharm']).options.opener, 'pycharm');
+  assert.equal(parseArgs(['open', '--list']).options.list, true);
   assert.throws(() => parseArgs(['django', 'app', '--python']), /requires/);
   assert.deepEqual(
     parseArgs(['react', 'app', '--set', 'module=example.com/app']).options.values,
     { module: 'example.com/app' }
   );
   assert.throws(() => parseArgs(['react', 'app', '--set', 'invalid']), /name=value/);
+  assert.throws(() => parseArgs(['open', '--with']), /requires an opener/);
 });
 
 test('command flag validation limits device flags', () => {
@@ -58,6 +63,11 @@ test('command flag validation limits device flags', () => {
   assert.throws(
     () => validateCommandFlags('react', { ...base, coldBoot: true }),
     /only supported by the android command/
+  );
+  assert.throws(() => validateCommandFlags('react', { ...base, list: true }), /open command/);
+  assert.throws(
+    () => validateCommandFlags('open', { ...base, editor: 'code', opener: 'cursor' }),
+    /cannot be used together/
   );
   assert.throws(
     () => validateCommandFlags('android', { ...base, shutdownAll: true }),

@@ -5,10 +5,10 @@ const { formatSequence } = require('../runner/command');
 
 const INSPECT_ACTIONS = ['install', 'run', 'test', 'build', 'check', 'clean', 'open'];
 
-function inspectAction(action, project, config) {
+function inspectAction(action, project, config, openerRegistry) {
   try {
     const commands = action === 'open'
-      ? buildOpenCommands(project, undefined, config)
+      ? buildOpenCommands(project, undefined, config, openerRegistry)
       : buildLifecycleCommands(action, project, { config });
     return {
       action,
@@ -21,7 +21,7 @@ function inspectAction(action, project, config) {
   }
 }
 
-function inspectProject(project, config) {
+function inspectProject(project, config, openerRegistry) {
   return {
     name: project.name,
     type: project.type,
@@ -29,7 +29,7 @@ function inspectProject(project, config) {
     packageManager: project.packageManager,
     xcode: project.xcode,
     recipeSource: project.recipe?.source,
-    actions: INSPECT_ACTIONS.map((action) => inspectAction(action, project, config)),
+    actions: INSPECT_ACTIONS.map((action) => inspectAction(action, project, config, openerRegistry)),
   };
 }
 

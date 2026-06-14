@@ -1,0 +1,80 @@
+[
+  {
+    "name": "vscode",
+    "description": "Visual Studio Code",
+    "target": "project",
+    "platforms": {
+      "darwin": { "executable": "open", "args": ["-a", "Visual Studio Code", "{target}"] },
+      "linux": { "executable": "code", "args": ["{target}"] },
+      "win32": { "executable": "code", "args": ["{target}"] }
+    }
+  },
+  {
+    "name": "antigravity",
+    "description": "Google Antigravity IDE",
+    "target": "project",
+    "platforms": {
+      "darwin": { "executable": "open", "args": ["-a", "Antigravity IDE", "{target}"] }
+    }
+  },
+  {
+    "name": "cursor",
+    "description": "Cursor",
+    "target": "project",
+    "platforms": {
+      "darwin": { "executable": "open", "args": ["-a", "Cursor", "{target}"] },
+      "linux": { "executable": "cursor", "args": ["{target}"] },
+      "win32": { "executable": "cursor", "args": ["{target}"] }
+    }
+  },
+  {
+    "name": "intellij",
+    "description": "IntelliJ IDEA",
+    "target": "project",
+    "platforms": {
+      "darwin": { "executable": "open", "args": ["-a", "IntelliJ IDEA", "{target}"] },
+      "linux": { "executable": "idea", "args": ["{target}"] },
+      "win32": { "executable": "idea64.exe", "args": ["{target}"] }
+    }
+  },
+  {
+    "name": "pycharm",
+    "description": "PyCharm",
+    "target": "project",
+    "platforms": {
+      "darwin": { "executable": "open", "args": ["-a", "PyCharm", "{target}"] },
+      "linux": { "executable": "pycharm", "args": ["{target}"] },
+      "win32": { "executable": "pycharm64.exe", "args": ["{target}"] }
+    }
+  },
+  {
+    "name": "webstorm",
+    "description": "WebStorm",
+    "target": "project",
+    "platforms": {
+      "darwin": { "executable": "open", "args": ["-a", "WebStorm", "{target}"] },
+      "linux": { "executable": "webstorm", "args": ["{target}"] },
+      "win32": { "executable": "webstorm64.exe", "args": ["{target}"] }
+    }
+  },
+  {
+    "name": "android_studio",
+    "aliases": ["android"],
+    "description": "Android Studio native project",
+    "target": "android",
+    "platforms": {
+      "darwin": { "executable": "open", "args": ["-a", "Android Studio", "{target}"] },
+      "linux": { "executable": "studio", "args": ["{target}"] },
+      "win32": { "executable": "studio64.exe", "args": ["{target}"] }
+    }
+  },
+  {
+    "name": "xcode",
+    "aliases": ["ios"],
+    "description": "Xcode workspace or project",
+    "target": "xcode",
+    "platforms": {
+      "darwin": { "executable": "open", "args": ["{target}"] }
+    }
+  }
+]

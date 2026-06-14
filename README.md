@@ -64,13 +64,15 @@ devcmd help
 
 No repository checkout, `chmod`, `npm link`, or shell `source` command is needed.
 
+When this repository is already available on macOS, double-click `dev-latest.command` in Finder to load the newest available source, then verify it with `dev help` and `dev doctor`. If the checkout has local or unpushed changes, the launcher links that source; otherwise it installs GitHub `main`.
+
 ### Install a tagged release
 
 <!-- devcmd-release-version:start -->
-For a reproducible released snapshot, install a specific GitHub tag. The tag matching the current package version is `v2.4.1`:
+For a reproducible released snapshot, install a specific GitHub tag. The tag matching the current package version is `v2.5.0`:
 
 ```bash
-npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.4.1.tar.gz
+npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.5.0.tar.gz
 ```
 <!-- devcmd-release-version:end -->
 
@@ -83,6 +85,8 @@ Install a newer release tag, or run the `main` installation command again, to up
 ```bash
 npm uninstall --global devcmd
 ```
+
+Repository contributors can also double-click `dev-latest.command` instead of entering setup or update commands manually.
 
 The uninstall command uses the package name recorded by the installed GitHub archive. It does not mean this project is available from the npm registry.
 
@@ -219,7 +223,7 @@ You can also pass a project path:
 ```bash
 dev test ../my-api
 dev build ~/Projects/my-app
-dev open ~/Projects/my-app --editor cursor
+dev open cursor ~/Projects/my-app
 ```
 
 DevCmd detects projects using files such as `package.json`, `pyproject.toml`, `manage.py`, `pubspec.yaml`, `gradlew`, `.xcworkspace`, and `.xcodeproj`. Node package managers are selected from lockfiles. Node lifecycle commands use the project's `package.json` scripts; Python commands prefer the project's `.venv`.
@@ -242,12 +246,75 @@ Current native defaults:
 - iOS build/test/clean: `xcodebuild` with the detected workspace or project
 - iOS automatic run is intentionally not provided because it requires an explicit scheme and destination
 
-Open platform tools:
+### Project Openers
+
+`dev open` uses Visual Studio Code by default. Select another built-in opener with a short positional name:
+
+```bash
+dev open
+dev open cursor
+dev open pycharm ~/Projects/my-api
+dev open webstorm ./frontend
+```
+
+Built-in openers:
+
+| Name | Description | Aliases |
+| --- | --- | --- |
+| `vscode` | Visual Studio Code | |
+| `antigravity` | Google Antigravity IDE | |
+| `cursor` | Cursor | |
+| `intellij` | IntelliJ IDEA | |
+| `pycharm` | PyCharm | |
+| `webstorm` | WebStorm | |
+| `android_studio` | Android Studio native project | `android` |
+| `xcode` | Xcode workspace or project | `ios` |
+
+Android Studio automatically prefers the detected project's `android/` directory. Xcode opens a detected `.xcworkspace` before `.xcodeproj` and is available only on macOS.
 
 ```bash
 dev open android
 dev open ios
+dev open --list
 ```
+
+Use `--with` when a path could be confused with an opener name, or use the legacy executable override when an unregistered editor is already available in `PATH`:
+
+```bash
+dev open ./cursor --with vscode
+dev open ./project --editor my-editor
+```
+
+Custom openers are loaded from `~/.devcmd/openers/*.json`. Validate and install one without modifying DevCmd source:
+
+```bash
+dev openers validate ./fleet.json
+mkdir -p ~/.devcmd/openers
+cp ./fleet.json ~/.devcmd/openers/
+dev open fleet ./my-project
+```
+
+Example `fleet.json`:
+
+```json
+{
+  "name": "fleet",
+  "description": "JetBrains Fleet",
+  "target": "project",
+  "platforms": {
+    "darwin": {
+      "executable": "open",
+      "args": ["-a", "Fleet", "{target}"]
+    },
+    "linux": {
+      "executable": "fleet",
+      "args": ["{target}"]
+    }
+  }
+}
+```
+
+Supported platforms are `darwin`, `linux`, and `win32`. Supported targets are `project`, `android`, and `xcode`; placeholders are `{target}`, `{root}`, and `{platform}`. Commands always use separate executable and argument arrays. Shell executables and executable placeholders are rejected. A custom opener with the same canonical name overrides its built-in definition.
 
 ## Device Commands
 
@@ -272,7 +339,7 @@ dev config
 dev config set packageManager pnpm
 dev config set initializeGit false
 dev config set python python3.13
-dev config set editor cursor
+dev config set opener cursor
 ```
 
 Default configuration:
@@ -282,7 +349,7 @@ Default configuration:
   "packageManager": "npm",
   "initializeGit": true,
   "python": "python3",
-  "editor": "code"
+  "opener": "vscode"
 }
 ```
 
@@ -333,6 +400,8 @@ History entries store executables and argument arrays instead of shell command s
 --install, --no-install
 --python <executable>
 --editor <executable>
+--with <opener>
+--list
 --set <name=value>
 --cold-boot
 --shutdown-all
@@ -344,11 +413,13 @@ DevCmd does not execute generated commands through a shell. Every executable and
 
 ```text
 dev                 CLI entry point
+dev-latest.command  macOS launcher for loading the newest available source
 src/cli.js          Prompt and command orchestration
 src/commands/       Framework, device, and history commands
 src/config/         Branding, version, user paths, and defaults
 src/devices/        Android and iOS discovery
 src/handlers/       CLI command handlers
+src/openers/        Built-in and custom project opener engine
 src/projects/       Detection, lifecycle adapters, and recent-project registry
 src/recipes/        Built-in and custom framework recipe engine
 src/runtime/        Shared command execution flow

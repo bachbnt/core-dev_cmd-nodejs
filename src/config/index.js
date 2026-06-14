@@ -8,6 +8,7 @@ const { getRecipeDefinitions, loadRecipeRegistry } = require('../recipes');
 const BRAND = 'DevCmd';
 const CONFIG_FILE = path.join(os.homedir(), '.devcmd', 'config.json');
 const HISTORY_FILE = path.join(os.homedir(), '.devcmd', 'history.json');
+const OPENERS_DIR = path.join(os.homedir(), '.devcmd', 'openers');
 const PROJECTS_FILE = path.join(os.homedir(), '.devcmd', 'projects.json');
 const RECIPES_DIR = path.join(os.homedir(), '.devcmd', 'recipes');
 const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'];
@@ -23,6 +24,7 @@ module.exports = {
   CONFIG_FILE,
   DEFAULT_DEVICES,
   HISTORY_FILE,
+  OPENERS_DIR,
   PACKAGE_MANAGERS,
   PROJECTS_FILE,
   RECIPES_DIR,

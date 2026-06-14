@@ -7,7 +7,7 @@ const CAPABILITIES = new Set(['language', 'packageManager', 'git', 'eslint', 'no
 const PACKAGE_MANAGERS = new Set(['npm', 'pnpm', 'yarn', 'bun']);
 const RESERVED_RECIPES = new Set([
   'doctor', 'inspect', 'install', 'run', 'test', 'build', 'clean', 'check', 'open',
-  'devices', 'android', 'ios', 'history', 'again', 'projects', 'recipes', 'config', 'completion',
+  'devices', 'android', 'ios', 'history', 'again', 'projects', 'recipes', 'openers', 'config', 'completion',
   'help', 'info',
 ]);
 const RESERVED_INPUTS = new Set([

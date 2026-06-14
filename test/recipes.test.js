@@ -107,6 +107,7 @@ test('recipe validation rejects shell fields, reserved names, and unsafe paths',
     /unsupported run fields/
   );
   assert.throws(() => validateRecipe(customRecipe({ name: 'build' })), /reserved/);
+  assert.throws(() => validateRecipe(customRecipe({ name: 'openers' })), /reserved/);
   assert.throws(
     () => validateRecipe(customRecipe({ inputs: { target: { required: true } } })),
     /input is reserved/

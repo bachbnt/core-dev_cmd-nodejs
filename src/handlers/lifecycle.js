@@ -5,19 +5,36 @@ const { inspectProject } = require('../commands/inspect');
 const { detectProject } = require('../projects/detect');
 const { getExistingProjects } = require('../projects/recent');
 const { executeCommands } = require('../runtime/execute');
+const { builtInOpenerRegistry, resolveOpener } = require('../openers');
 
 const LIFECYCLE_COMMANDS = ['install', 'run', 'test', 'build', 'check', 'clean', 'open'];
 
-function resolveLifecycleTarget(command, positionals) {
+function resolveLifecycleTarget(
+  command,
+  positionals,
+  options = {},
+  openerRegistry = builtInOpenerRegistry
+) {
+  if (command === 'open' && options.list) {
+    if (positionals.length > 0) throw new Error('Usage: dev open --list');
+    return { listOpeners: true };
+  }
   if (command === 'open' && positionals[0] === 'recent') {
     if (positionals.length > 1) throw new Error('Usage: dev open recent');
     const recent = getExistingProjects()[0];
     if (!recent) throw new Error('No recent project is available.');
     return { projectPath: recent.path };
   }
-  if (command === 'open' && ['android', 'ios'].includes(positionals[0])) {
-    if (positionals.length > 2) throw new Error(`Usage: dev open ${positionals[0]} [path]`);
-    return { openMode: positionals[0], projectPath: positionals[1] || process.cwd() };
+  if (command === 'open') {
+    if (options.opener) {
+      if (positionals.length > 1) throw new Error('Usage: dev open [path] --with <opener>');
+      return { openerName: options.opener, projectPath: positionals[0] || process.cwd() };
+    }
+    const opener = resolveOpener(openerRegistry, positionals[0]);
+    if (opener) {
+      if (positionals.length > 2) throw new Error(`Usage: dev open ${positionals[0]} [path]`);
+      return { openerName: positionals[0], projectPath: positionals[1] || process.cwd() };
+    }
   }
   if (positionals.length > 1) throw new Error(`Usage: dev ${command} [path]`);
   return { projectPath: positionals[0] || process.cwd() };
@@ -25,10 +42,27 @@ function resolveLifecycleTarget(command, positionals) {
 
 async function handleLifecycle(context) {
   const { p, pc, command, positionals, options, config } = context;
-  const { projectPath, openMode } = resolveLifecycleTarget(command, positionals);
+  const { projectPath, openerName, listOpeners } = resolveLifecycleTarget(
+    command,
+    positionals,
+    options,
+    context.openerRegistry
+  );
+  if (listOpeners) {
+    const lines = [...context.openerRegistry.values()].map((opener) => {
+      const aliases = opener.aliases?.length ? ` aliases: ${opener.aliases.join(', ')}` : '';
+      return `${opener.name.padEnd(20)} [${opener.source}] ${opener.description}${aliases}`;
+    });
+    p.note(lines.join('\n'), 'Available openers');
+    p.outro('Use: dev open <opener> [path]');
+    return 0;
+  }
+  if (options.editor && openerName) {
+    throw new Error('--editor cannot be combined with a named opener.');
+  }
   const project = detectProject(projectPath, { registry: context.recipeRegistry });
   const commands = command === 'open'
-    ? buildOpenCommands(project, openMode, { ...config, editor: options.editor || config.editor })
+    ? buildOpenCommands(project, openerName, config, context.openerRegistry, { editor: options.editor })
     : buildLifecycleCommands(command, project, { config });
 
   return executeCommands(p, pc, commands, {
@@ -44,7 +78,8 @@ function handleInspect(context) {
   if (positionals.length > 1) throw new Error('Usage: dev inspect [path]');
   const inspection = inspectProject(
     detectProject(positionals[0] || process.cwd(), { registry: context.recipeRegistry }),
-    config
+    config,
+    context.openerRegistry
   );
   const lines = [
     `Name: ${inspection.name}`,

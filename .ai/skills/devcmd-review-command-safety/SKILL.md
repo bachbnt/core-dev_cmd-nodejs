@@ -13,7 +13,7 @@ Review untrusted input from parsing through process execution and persisted repl
 
 1. Trace inputs through `src/utils/args.js`, handlers, command builders, and `src/runner/`.
 2. Confirm processes use structured `{ executable, args, cwd? }` values and never enable the child-process `shell` option.
-3. Include recipe loading, placeholder resolution, file destinations, copy sources, executable mappings, and user recipe overrides in the input trace.
+3. Include recipe and opener loading, placeholder resolution, file destinations, copy sources, executable mappings, and user overrides in the input trace.
 4. Check project names, paths, executable overrides, history entries, and config values before use.
 5. Verify formatting functions are display-only and never become executable input.
 6. Review clean/delete behavior for root escape, symlink, and overbroad deletion risks.

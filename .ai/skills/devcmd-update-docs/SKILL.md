@@ -11,8 +11,8 @@ Derive documentation from implemented behavior and verified commands, not from a
 
 ## Workflow
 
-1. Read `src/cli.js`, `src/config/index.js`, `src/recipes/built-ins.json`, `src/commands/completion.js`, argument parsing, and the relevant handlers.
-2. Compare framework names, lifecycle actions, options, defaults, aliases, prerequisites, and examples across help, completion, and README.
+1. Read `src/cli.js`, `src/config/index.js`, `src/recipes/built-ins.json`, `src/openers/built-ins.json`, `src/commands/completion.js`, argument parsing, and the relevant handlers.
+2. Compare framework and opener names, lifecycle actions, options, defaults, aliases, prerequisites, and examples across help, completion, and README.
 3. Run commands with `--dry-run` before documenting generated command behavior.
 4. Verify installation URLs, repository metadata, release links, the current version or tag, and `npm pack --dry-run` contents when referenced.
 5. Separate end-user installation from contributor setup. Make clear whether a click downloads an archive or actually installs software.

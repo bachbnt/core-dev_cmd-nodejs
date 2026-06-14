@@ -17,6 +17,8 @@ function parseArgs(argv) {
     noInstall: false,
     python: undefined,
     editor: undefined,
+    opener: undefined,
+    list: false,
     values: {},
   };
   const positionals = [];
@@ -33,6 +35,7 @@ function parseArgs(argv) {
     if (arg === '--dry-run') options.dryRun = true;
     else if (arg === '--cold-boot') options.coldBoot = true;
     else if (arg === '--shutdown-all') options.shutdownAll = true;
+    else if (arg === '--list') options.list = true;
     else if (arg === '--typescript' || arg === '--ts') options.typescript = true;
     else if (arg === '--javascript' || arg === '--js') options.typescript = false;
     else if (arg === '--git') options.git = true;
@@ -50,6 +53,11 @@ function parseArgs(argv) {
       options.editor = args.shift();
       if (!options.editor || options.editor.startsWith('-')) {
         throw new Error('--editor requires an application or executable name.');
+      }
+    } else if (arg === '--with') {
+      options.opener = args.shift();
+      if (!options.opener || options.opener.startsWith('-')) {
+        throw new Error('--with requires an opener name.');
       }
     } else if (arg === '--set') {
       const assignment = args.shift();
@@ -83,6 +91,18 @@ function validateCommandFlags(command, options, definitions = frameworkDefinitio
   }
   if (options.shutdownAll && command !== 'ios') {
     throw new Error('--shutdown-all is only supported by the ios command.');
+  }
+  if (options.list && command !== 'open') {
+    throw new Error('--list is only supported by the open command.');
+  }
+  if (options.opener && command !== 'open') {
+    throw new Error('--with is only supported by the open command.');
+  }
+  if (options.editor && command !== 'open') {
+    throw new Error('--editor is only supported by the open command.');
+  }
+  if (options.editor && options.opener) {
+    throw new Error('--editor and --with cannot be used together.');
   }
 
   const hasPreset =

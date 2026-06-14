@@ -8,10 +8,10 @@ const DEFAULT_CONFIG = {
   packageManager: 'npm',
   initializeGit: true,
   python: process.platform === 'win32' ? 'python' : 'python3',
-  editor: 'code',
+  opener: 'vscode',
 };
 
-const CONFIG_KEYS = Object.keys(DEFAULT_CONFIG);
+const CONFIG_KEYS = [...Object.keys(DEFAULT_CONFIG), 'editor'];
 
 function readJson(file, fsImpl = fs) {
   try {
@@ -32,7 +32,10 @@ function validateConfig(config) {
   if (typeof config.python !== 'string' || !config.python.trim()) {
     throw new Error('python must be a non-empty executable name or path.');
   }
-  if (typeof config.editor !== 'string' || !config.editor.trim()) {
+  if (config.opener !== undefined && (typeof config.opener !== 'string' || !config.opener.trim())) {
+    throw new Error('opener must be a non-empty opener name.');
+  }
+  if (config.editor !== undefined && (typeof config.editor !== 'string' || !config.editor.trim())) {
     throw new Error('editor must be a non-empty application or executable name.');
   }
   return config;
@@ -41,7 +44,10 @@ function validateConfig(config) {
 function loadConfig(options = {}) {
   const file = options.file || CONFIG_FILE;
   const fsImpl = options.fsImpl || fs;
-  return validateConfig({ ...DEFAULT_CONFIG, ...readJson(file, fsImpl) });
+  const saved = readJson(file, fsImpl);
+  const config = { ...DEFAULT_CONFIG, ...saved };
+  if (saved.editor && saved.opener === undefined) delete config.opener;
+  return validateConfig(config);
 }
 
 function parseConfigValue(key, value) {
@@ -67,6 +73,8 @@ function saveConfig(config, options = {}) {
 
 function setConfigValue(key, value, options = {}) {
   const config = loadConfig(options);
+  if (key === 'editor') delete config.opener;
+  if (key === 'opener') delete config.editor;
   config[key] = parseConfigValue(key, value);
   return saveConfig(config, options);
 }

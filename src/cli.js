@@ -11,14 +11,16 @@ const {
   handleConfig,
   handleDoctor,
   handleInfo,
+  handleOpeners,
   handleProjects,
   handleRecipes,
 } = require('./handlers/system');
 const { describeFailure, executeCommands } = require('./runtime/execute');
 const { parseArgs, validateCommandFlags } = require('./utils/args');
 const { getRecipeDefinitions, loadRecipeRegistry } = require('./recipes');
+const { loadOpenerRegistry } = require('./openers');
 
-function printHelp(pc, definitions = frameworkDefinitions) {
+function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   console.log(
     `\n${pc.bgCyan(pc.black(` ${BRAND} v${VERSION} `))} ${pc.bold('Development toolkit by bachbnt')}\n`
   );
@@ -36,6 +38,7 @@ function printHelp(pc, definitions = frameworkDefinitions) {
   }
   console.log(`  ${pc.magenta('projects'.padEnd(16))} ${pc.dim('Show recently used projects')}`);
   console.log(`  ${pc.magenta('recipes'.padEnd(16))} ${pc.dim('List or validate framework recipes')}`);
+  console.log(`  ${pc.magenta('openers'.padEnd(16))} ${pc.dim('List or validate project openers')}`);
   console.log(`  ${pc.magenta('config'.padEnd(16))} ${pc.dim('Show or update DevCmd defaults')}`);
   console.log(`  ${pc.magenta('completion'.padEnd(16))} ${pc.dim('Generate bash or zsh completion')}`);
   console.log(`\n${pc.bold('Devices:')}`);
@@ -55,6 +58,8 @@ function printHelp(pc, definitions = frameworkDefinitions) {
   console.log('  --python <executable>      Select Python executable');
   console.log('  --set <name=value>         Set a custom recipe input');
   console.log('  --editor <executable>      Override editor for dev open');
+  console.log('  --with <opener>            Select an opener for dev open');
+  console.log('  --list                     List available openers');
   console.log('  --cold-boot                Cold boot Android emulator');
   console.log('  --shutdown-all             Shutdown all iOS simulators\n');
 }
@@ -66,6 +71,7 @@ async function dispatch(context) {
   if (command === 'doctor') return handleDoctor(context);
   if (command === 'projects') return handleProjects(context);
   if (command === 'recipes') return handleRecipes(context);
+  if (command === 'openers') return handleOpeners(context);
   if (command === 'inspect') return handleInspect(context);
   if (LIFECYCLE_COMMANDS.includes(command)) return handleLifecycle(context);
   if (command === 'info') return handleInfo(context);
@@ -83,6 +89,7 @@ async function main(argv) {
   let parsed;
   let recipeRegistry;
   let definitions;
+  let openerRegistry;
 
   try {
     parsed = parseArgs(argv);
@@ -96,12 +103,14 @@ async function main(argv) {
     const validatingRecipe = command === 'recipes' && positionals[0] === 'validate';
     recipeRegistry = loadRecipeRegistry({ includeUser: !validatingRecipe });
     definitions = getRecipeDefinitions(recipeRegistry);
+    const validatingOpener = command === 'openers' && positionals[0] === 'validate';
+    openerRegistry = loadOpenerRegistry({ includeUser: !validatingOpener });
   } catch (error) {
     p.log.error(error.message);
     return 1;
   }
   if (!command || ['help', '-h', '--help'].includes(command)) {
-    printHelp(pc, definitions);
+    printHelp(pc, definitions, openerRegistry);
     return command ? 0 : 1;
   }
 
@@ -109,7 +118,8 @@ async function main(argv) {
     try {
       process.stdout.write(getCompletion(
         positionals[0] || process.env.SHELL?.split('/').pop() || 'zsh',
-        definitions
+        definitions,
+        openerRegistry
       ));
       return 0;
     } catch (error) {
@@ -131,6 +141,7 @@ async function main(argv) {
       config,
       frameworkDefinitions: definitions,
       recipeRegistry,
+      openerRegistry,
     });
   } catch (error) {
     p.log.error(error.message);
