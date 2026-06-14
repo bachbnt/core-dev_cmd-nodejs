@@ -66,11 +66,13 @@ No repository checkout, `chmod`, `npm link`, or shell `source` command is needed
 
 ### Install a tagged release
 
-For a reproducible released snapshot, install a specific GitHub tag. The latest published release is currently `v2.3.0`:
+<!-- devcmd-release-version:start -->
+For a reproducible released snapshot, install a specific GitHub tag. The tag matching the current package version is `v2.4.1`:
 
 ```bash
-npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.3.0.tar.gz
+npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.4.1.tar.gz
 ```
+<!-- devcmd-release-version:end -->
 
 Tagged releases can predate features documented on `main`. Check [GitHub Releases](https://github.com/bachbnt/dev-cmd/releases) for newer tags and release notes. These archive URLs do not require Git.
 
@@ -371,7 +373,7 @@ npm run release
 
 On macOS, double-click `release.command` in Finder to open Terminal and choose either a real release or a dry-run preview. The launcher runs the release through a Zsh login shell so Node.js, NVM, and GitHub CLI remain available without loading Zsh configuration inside Bash. It keeps the window open after an error so the message can be reviewed.
 
-The release script validates Git and GitHub CLI state, checks that local `main` is not behind `origin/main`, runs tests and package validation, updates `package.json` and `package-lock.json`, commits all current changes, creates an annotated tag, pushes the branch and tag, and creates a GitHub Release with generated notes.
+The release script validates Git and GitHub CLI state, checks that local `main` is not behind `origin/main`, runs tests and package validation, updates `package.json`, `package-lock.json`, and the tagged-install version in this README, commits all current changes, creates an annotated tag, pushes the branch and tag, and creates a GitHub Release with generated notes.
 
 Use a specific increment or version for automation:
 

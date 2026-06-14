@@ -118,6 +118,7 @@ printf '  Remote:  %s\n' "$(git remote get-url origin)"
 printf '  GitHub:  %s\n' "$REPOSITORY"
 printf '  Release: %s\n' "$([[ "$DRAFT" == true ]] && printf draft || printf published)"
 printf '  Ahead:   %s commit(s)\n' "$AHEAD"
+node "$SCRIPT_DIR/sync-release-version.js" "$NEXT_VERSION" --dry-run
 if [[ -n "$CHANGES" ]]; then
   printf '\nChanges included in the release commit:\n%s\n' "$CHANGES"
 fi
@@ -141,6 +142,17 @@ fi
 if [[ "$NEXT_VERSION" != "$CURRENT_VERSION" ]]; then
   npm version "$NEXT_VERSION" --no-git-tag-version --ignore-scripts
 fi
+node "$SCRIPT_DIR/sync-release-version.js" "$NEXT_VERSION"
+
+PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+LOCK_VERSION="$(node -p "require('./package-lock.json').version")"
+LOCK_PACKAGE_VERSION="$(node -p "require('./package-lock.json').packages[''].version")"
+[[ "$PACKAGE_VERSION" == "$NEXT_VERSION" ]] || fail "package.json version is $PACKAGE_VERSION; expected $NEXT_VERSION."
+[[ "$LOCK_VERSION" == "$NEXT_VERSION" ]] || fail "package-lock.json version is $LOCK_VERSION; expected $NEXT_VERSION."
+[[ "$LOCK_PACKAGE_VERSION" == "$NEXT_VERSION" ]] || fail "package-lock.json root package version is $LOCK_PACKAGE_VERSION; expected $NEXT_VERSION."
+node "$SCRIPT_DIR/sync-release-version.js" "$NEXT_VERSION" --check
+npm pack --dry-run >/dev/null
+git diff --check
 
 git add -A
 git commit -m "release: $TAG"
