@@ -23,7 +23,7 @@ DevCmd is an interactive development CLI for scaffolding projects, detecting exi
 
 ## Requirements
 
-- Node.js 20.19 or newer, including npm.
+- Node.js 24.13 or newer, including npm.
 - Android Studio is only required for Android emulator features.
 - Xcode is only required for iOS simulator features.
 - Framework SDKs are only required for the frameworks you use, such as Flutter or Python.
@@ -69,10 +69,10 @@ When this repository is already available on macOS, double-click `dev-latest.com
 ### Install a tagged release
 
 <!-- devcmd-release-version:start -->
-For a reproducible released snapshot, install a specific GitHub tag. The tag matching the current package version is `v2.5.2`:
+For a reproducible released snapshot, install a specific GitHub tag. The tag matching the current package version is `v2.5.3`:
 
 ```bash
-npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.5.2.tar.gz
+npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.5.3.tar.gz
 ```
 <!-- devcmd-release-version:end -->
 

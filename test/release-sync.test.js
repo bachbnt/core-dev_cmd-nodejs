@@ -4,7 +4,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { version } = require('../package.json');
+const packageJson = require('../package.json');
+const packageLock = require('../package-lock.json');
 const { updateReleaseVersion } = require('../scripts/sync-release-version');
 
 test('release version synchronization updates only the marked README block', () => {
@@ -28,5 +29,14 @@ test('release version synchronization requires one marked version block', () => 
 
 test('README tagged install matches package.json version', () => {
   const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
-  assert.equal(updateReleaseVersion(readme, version).changed, false);
+  assert.equal(updateReleaseVersion(readme, packageJson.version).changed, false);
+});
+
+test('Node.js requirement is synchronized across package metadata and README', () => {
+  const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+  const nodeRequirement = packageJson.engines.node;
+  const displayVersion = nodeRequirement.replace(/^>=/, '').replace(/\.0$/, '');
+
+  assert.equal(packageLock.packages[''].engines.node, nodeRequirement);
+  assert.match(readme, new RegExp(`Node\\.js ${displayVersion} or newer`));
 });

@@ -1,6 +1,6 @@
 {
   "name": "devcmd",
-  "version": "2.5.2",
+  "version": "2.5.3",
   "description": "DevCmd project scaffolding, lifecycle, and development environment CLI",
   "bin": {
     "dev": "./dev",
@@ -31,7 +31,7 @@
     "url": "https://github.com/bachbnt/dev-cmd/issues"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=24.13.0"
   },
   "dependencies": {
     "@clack/prompts": "^1.5.1",

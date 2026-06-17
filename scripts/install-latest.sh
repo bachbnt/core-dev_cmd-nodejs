@@ -6,8 +6,22 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 PACKAGE_URL="https://github.com/bachbnt/dev-cmd/archive/refs/heads/main.tar.gz"
+REQUIRED_NODE_VERSION="24.13.0"
 DRY_RUN=false
 MODE="auto"
+
+check_node_version() {
+  node - "$REQUIRED_NODE_VERSION" <<'NODE'
+const required = process.argv[2].split('.').map(Number);
+const current = process.versions.node.split('.').map(Number);
+for (let index = 0; index < 3; index += 1) {
+  const currentPart = current[index] || 0;
+  const requiredPart = required[index] || 0;
+  if (currentPart > requiredPart) process.exit(0);
+  if (currentPart < requiredPart) process.exit(1);
+}
+NODE
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -24,6 +38,10 @@ done
 
 if ! command -v node >/dev/null 2>&1; then
   printf 'Error: Node.js is not available in PATH.\n' >&2
+  exit 1
+fi
+if ! check_node_version; then
+  printf 'Error: DevCmd requires Node.js %s or newer. Current Node.js: %s\n' "$REQUIRED_NODE_VERSION" "$(node -p 'process.version')" >&2
   exit 1
 fi
 if ! command -v npm >/dev/null 2>&1; then
