@@ -38,7 +38,8 @@ function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   console.log(`  ${pc.magenta('doctor'.padEnd(16))} ${pc.dim('Check development tools')}`);
   console.log(`  ${pc.magenta('inspect'.padEnd(16))} ${pc.dim('Show detected project and lifecycle commands')}`);
   for (const action of LIFECYCLE_COMMANDS) {
-    console.log(`  ${pc.magenta(action.padEnd(16))} ${pc.dim(`${action} the detected project`)}`);
+    const label = action.charAt(0).toUpperCase() + action.slice(1);
+    console.log(`  ${pc.magenta(action.padEnd(16))} ${pc.dim(`${label} the detected project`)}`);
   }
   console.log(`  ${pc.magenta('projects'.padEnd(16))} ${pc.dim('Show recently used projects')}`);
   console.log(`  ${pc.magenta('recipes'.padEnd(16))} ${pc.dim('List or validate framework recipes')}`);
