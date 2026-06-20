@@ -130,14 +130,37 @@ async function handleScaffold(context) {
     projectPath: path.resolve(target),
     projectType: command,
     recipeSource: recipe.source,
+    config,
   }, {
     ...options,
     requirements: getFrameworkRequirements(command, options, recipeRegistry, target),
   });
 }
 
+async function handleInit(context) {
+  const { p } = context;
+  const definitions = context.frameworkDefinitions || frameworkDefinitions;
+
+  const framework = await p.select({
+    message: 'Select a framework:',
+    options: Object.entries(definitions).map(([value, def]) => ({
+      value,
+      label: value,
+      hint: def.description,
+    })),
+  });
+
+  if (p.isCancel(framework)) {
+    p.cancel('Operation cancelled.');
+    return 130;
+  }
+
+  return handleScaffold({ ...context, command: framework });
+}
+
 module.exports = {
   applyConfigDefaults,
+  handleInit,
   handleScaffold,
   promptFrameworkOptions,
 };

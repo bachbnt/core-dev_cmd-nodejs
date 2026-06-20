@@ -1,7 +1,7 @@
 // Copyright (c) 2026 bachbnt
 
 const { createCommand } = require('../../runner/command');
-const { internalCleaner, unsupported } = require('./common');
+const { internalCleaner, internalResetter, unsupported } = require('./common');
 
 function runScript(project, script) {
   return createCommand(project.packageManager, ['run', script], { cwd: project.root });
@@ -26,6 +26,9 @@ function build(action, project) {
   if (action === 'run') return [runScript(project, requireScript(project, ['dev', 'start'], action))];
   if (action === 'test') return [runScript(project, requireScript(project, ['test'], action))];
   if (action === 'build') return [runScript(project, requireScript(project, ['build'], action))];
+  if (action === 'reset') {
+    return [...internalResetter(project), createCommand(project.packageManager, ['install'], { cwd: project.root })];
+  }
   if (action === 'clean') {
     return project.packageJson.scripts?.clean ? [runScript(project, 'clean')] : internalCleaner(project);
   }

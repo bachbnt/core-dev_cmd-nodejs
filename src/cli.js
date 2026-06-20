@@ -3,11 +3,12 @@
 const { BRAND, PACKAGE_MANAGERS, VERSION, frameworkDefinitions } = require('./config');
 const { loadConfig } = require('./config/user');
 const { getCompletion } = require('./commands/completion');
+const { handleClone } = require('./handlers/clone');
 const { handleDeviceCommand, handleDeviceList } = require('./handlers/devices');
 const { handleAgain, handleHistory, rebuildHistoryCommands } = require('./handlers/history');
 const { handleInspect, handleLifecycle } = require('./handlers/lifecycle');
 const { LIFECYCLE_COMMANDS } = require('./constants');
-const { applyConfigDefaults, handleScaffold } = require('./handlers/scaffold');
+const { applyConfigDefaults, handleInit, handleScaffold } = require('./handlers/scaffold');
 const {
   handleConfig,
   handleDoctor,
@@ -15,6 +16,7 @@ const {
   handleOpeners,
   handleProjects,
   handleRecipes,
+  handleUpdate,
 } = require('./handlers/system');
 const { describeFailure, executeCommands } = require('./runtime/execute');
 const { parseArgs, validateCommandFlags } = require('./utils/args');
@@ -40,6 +42,9 @@ function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   console.log(`  ${pc.magenta('projects'.padEnd(16))} ${pc.dim('Show recently used projects')}`);
   console.log(`  ${pc.magenta('recipes'.padEnd(16))} ${pc.dim('List or validate framework recipes')}`);
   console.log(`  ${pc.magenta('openers'.padEnd(16))} ${pc.dim('List or validate project openers')}`);
+  console.log(`  ${pc.magenta('init'.padEnd(16))} ${pc.dim('Create a new project interactively')}`);
+  console.log(`  ${pc.magenta('clone'.padEnd(16))} ${pc.dim('Clone a repository and install dependencies')}`);
+  console.log(`  ${pc.magenta('update'.padEnd(16))} ${pc.dim('Update DevCmd to the latest version')}`);
   console.log(`  ${pc.magenta('config'.padEnd(16))} ${pc.dim('Show or update DevCmd defaults')}`);
   console.log(`  ${pc.magenta('completion'.padEnd(16))} ${pc.dim('Generate bash or zsh completion')}`);
   console.log(`\n${pc.bold('Openers:')}`);
@@ -90,6 +95,9 @@ const COMMAND_HANDLERS = new Map([
   ['info', handleInfo],
   ['history', handleHistory],
   ['again', handleAgain],
+  ['init', handleInit],
+  ['update', handleUpdate],
+  ['clone', handleClone],
   ['devices', handleDeviceList],
   ['android', handleDeviceCommand],
   ['ios', handleDeviceCommand],

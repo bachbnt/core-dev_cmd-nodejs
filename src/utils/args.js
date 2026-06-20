@@ -9,6 +9,8 @@ function parseArgs(argv) {
     dryRun: false,
     coldBoot: false,
     shutdownAll: false,
+    clear: false,
+    project: undefined,
     target: undefined,
     typescript: undefined,
     packageManager: undefined,
@@ -35,6 +37,13 @@ function parseArgs(argv) {
     if (arg === '--dry-run') options.dryRun = true;
     else if (arg === '--cold-boot') options.coldBoot = true;
     else if (arg === '--shutdown-all') options.shutdownAll = true;
+    else if (arg === '--clear') options.clear = true;
+    else if (arg === '--project') {
+      options.project = args.shift();
+      if (!options.project || options.project.startsWith('-')) {
+        throw new Error('--project requires a path.');
+      }
+    }
     else if (arg === '--list') options.list = true;
     else if (arg === '--typescript' || arg === '--ts') options.typescript = true;
     else if (arg === '--javascript' || arg === '--js') options.typescript = false;
@@ -88,6 +97,12 @@ function parseArgs(argv) {
 function validateCommandFlags(command, options, definitions = frameworkDefinitions) {
   if (options.coldBoot && command !== 'android') {
     throw new Error('--cold-boot is only supported by the android command.');
+  }
+  if (options.clear && command !== 'history') {
+    throw new Error('--clear is only supported by the history command.');
+  }
+  if (options.project && command !== 'history') {
+    throw new Error('--project is only supported by the history command.');
   }
   if (options.shutdownAll && command !== 'ios') {
     throw new Error('--shutdown-all is only supported by the ios command.');

@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { createCommand } = require('../../runner/command');
-const { internalCleaner, unsupported } = require('./common');
+const { internalCleaner, internalResetter, unsupported } = require('./common');
 
 const TYPES = ['python', 'django', 'fastapi', 'flask'];
 
@@ -47,6 +47,13 @@ function build(action, project, context) {
   }
   if (action === 'test') return [createCommand(python, ['-m', 'pytest'], { cwd: project.root })];
   if (action === 'build') return [createCommand(python, ['-m', 'build'], { cwd: project.root })];
+  if (action === 'reset') {
+    return [
+      ...internalResetter(project),
+      createCommand(config.python, ['-m', 'venv', '.venv'], { cwd: project.root }),
+      createCommand(venvPython(project), ['-m', 'pip', 'install', '-e', '.[dev]'], { cwd: project.root }),
+    ];
+  }
   if (action === 'clean') return internalCleaner(project);
   if (action === 'check') {
     const commands = [];

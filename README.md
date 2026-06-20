@@ -12,9 +12,9 @@ DevCmd is an interactive development CLI for scaffolding projects, detecting exi
 - Select TypeScript/JavaScript, package manager, Git, and ESLint where supported.
 - Inspect device runtime and boot status.
 - Cold boot Android emulators and shut down all iOS simulators.
-- View command history and repeat the latest successful command.
+- View command history, repeat any recent command, and filter by project.
 - Detect Node.js, Python, Flutter, Android, and iOS projects from any child directory.
-- Use consistent `install`, `run`, `test`, `build`, `clean`, and `open` commands.
+- Use consistent `install`, `run`, `test`, `build`, `clean`, `reset`, and `open` commands.
 - Inspect detected projects and their resolved lifecycle commands before execution.
 - Run framework-aware quality checks with one `dev check` command.
 - Add trusted user-defined framework recipes without changing DevCmd source.
@@ -64,15 +64,15 @@ devcmd help
 
 No repository checkout, `chmod`, `npm link`, or shell `source` command is needed.
 
-When this repository is already available on macOS, double-click `dev-latest.command` in Finder to load the newest available source, then verify it with `dev help` and `dev doctor`. If the checkout has local or unpushed changes, the launcher links that source; otherwise it installs GitHub `main`.
+When this repository is already available on macOS, double-click `commands/install-remote.command` in Finder to load the newest available source, then verify it with `dev help` and `dev doctor`. If the checkout has local or unpushed changes, the launcher links that source; otherwise it installs GitHub `main`.
 
 ### Install a tagged release
 
 <!-- devcmd-release-version:start -->
-For a reproducible released snapshot, install a specific GitHub tag. The tag matching the current package version is `v2.5.4`:
+For a reproducible released snapshot, install a specific GitHub tag. The tag matching the current package version is `v2.6.0`:
 
 ```bash
-npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.5.4.tar.gz
+npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.6.0.tar.gz
 ```
 <!-- devcmd-release-version:end -->
 
@@ -86,7 +86,7 @@ Install a newer release tag, or run the `main` installation command again, to up
 npm uninstall --global devcmd
 ```
 
-Repository contributors can also double-click `dev-latest.command` instead of entering setup or update commands manually.
+Repository contributors can also double-click `commands/install-remote.command` instead of entering setup or update commands manually.
 
 The uninstall command uses the package name recorded by the installed GitHub archive. It does not mean this project is available from the npm registry.
 
@@ -107,9 +107,9 @@ Cloning is only needed when contributing to DevCmd itself. Clone the repository,
 ```bash
 git clone https://github.com/bachbnt/dev-cmd.git
 cd dev-cmd
-./scripts/setup-dev.sh
+./scripts/install-local.sh
 # or
-npm run setup
+npm run install-local
 ```
 
 The setup installs dependencies and creates an npm symlink from the active Node.js installation to the local repository. Run it once; later source changes are used automatically the next time `dev` runs, without `source ~/.zshrc` or relinking.
@@ -122,7 +122,13 @@ dev <command> [target] [options]
 devcmd <command> [target] [options]
 ```
 
-Interactive project creation:
+Interactive project creation with framework selection:
+
+```bash
+dev init
+```
+
+Interactive project creation for a specific framework:
 
 ```bash
 dev next
@@ -215,8 +221,11 @@ dev test
 dev build
 dev check
 dev clean
+dev reset
 dev open
 ```
+
+`dev reset` removes the dependency directory (`node_modules` or `.venv`) and reinstalls from scratch. Flutter runs `flutter clean` then `flutter pub get`. iOS runs `xcodebuild clean` then resolves package dependencies.
 
 You can also pass a project path:
 
@@ -340,7 +349,10 @@ dev config set packageManager pnpm
 dev config set initializeGit false
 dev config set python python3.13
 dev config set opener cursor
+dev config set notify 10
 ```
+
+`notify` sets the notification threshold in seconds. DevCmd sends a system notification when a command runs longer than the threshold. Set to `0` to disable (default).
 
 Default configuration:
 
@@ -349,7 +361,8 @@ Default configuration:
   "packageManager": "npm",
   "initializeGit": true,
   "python": "python3",
-  "opener": "vscode"
+  "opener": "vscode",
+  "notify": 0
 }
 ```
 
@@ -360,6 +373,25 @@ Successful scaffold and lifecycle commands register projects in `~/.devcmd/proje
 ```bash
 dev projects
 dev open recent
+```
+
+## Clone and Update
+
+Clone a repository and automatically install its dependencies:
+
+```bash
+dev clone owner/repo
+dev clone owner/repo my-dir
+dev clone https://github.com/owner/repo
+dev clone git@github.com:owner/repo.git
+```
+
+`owner/repo` is treated as a GitHub shorthand. DevCmd detects the project type after cloning and runs `dev install` automatically.
+
+Update DevCmd to the latest version from GitHub:
+
+```bash
+dev update
 ```
 
 ## Shell Completion
@@ -379,11 +411,16 @@ The generated completion registers both executable names: `dev` and `devcmd`.
 
 ```bash
 dev history
+dev history --clear
+dev history --project ~/Projects/my-app
 dev again
+dev again 3
 dev again --dry-run
 ```
 
 The latest 50 successful commands are stored in `~/.devcmd/history.json`.
+
+`dev again <n>` repeats the nth entry shown by `dev history`. `dev history --clear` deletes the history file. `dev history --project <path>` filters entries by project path.
 
 History entries store executables and argument arrays instead of shell command strings. Compatible older entries are rebuilt from their saved metadata before `dev again` runs them.
 
@@ -405,6 +442,8 @@ History entries store executables and argument arrays instead of shell command s
 --set <name=value>
 --cold-boot
 --shutdown-all
+--clear                     (history only) Delete the history file
+--project <path>            (history only) Filter history by project path
 ```
 
 ## Development
@@ -412,20 +451,26 @@ History entries store executables and argument arrays instead of shell command s
 DevCmd does not execute generated commands through a shell. Every executable and argument is passed separately to Node.js `spawn`, and multi-step operations such as scaffolding followed by `git init` run as separate processes.
 
 ```text
-dev                 CLI entry point
-dev-latest.command  macOS launcher for loading the newest available source
-src/cli.js          Prompt and command orchestration
-src/commands/       Framework, device, and history commands
-src/config/         Branding, version, user paths, and defaults
-src/devices/        Android and iOS discovery
-src/handlers/       CLI command handlers
-src/openers/        Built-in and custom project opener engine
-src/projects/       Detection, lifecycle adapters, and recent-project registry
-src/recipes/        Built-in and custom framework recipe engine
-src/runtime/        Shared command execution flow
-src/runner/         Command formatting and process execution
-src/utils/          Argument parsing and validation
-test/               Node.js unit tests
+dev                         CLI entry point
+commands/                   macOS double-click launchers
+  install-local.command     Link local source via npm
+  install-remote.command    Install latest source from GitHub
+  release.command           Create a GitHub release interactively
+scripts/                    Shell and Node.js automation scripts
+src/cli.js                  Prompt and command orchestration
+src/constants.js            Shared command name lists
+src/commands/               Framework, device, and history commands
+src/config/                 Branding, version, user paths, and defaults
+src/devices/                Android and iOS discovery
+src/generators/             Node.js scripts invoked as child processes
+src/handlers/               CLI command handlers
+src/openers/                Built-in and custom project opener engine
+src/projects/               Detection, lifecycle adapters, and recent-project registry
+src/recipes/                Built-in and custom framework recipe engine
+src/runtime/                Shared command execution flow
+src/runner/                 Command formatting and process execution
+src/utils/                  Argument parsing and validation
+test/                       Node.js unit tests
 ```
 
 Run the test suite with:
@@ -442,7 +487,7 @@ Create a release interactively and choose `patch`, `minor`, `major`, the current
 npm run release
 ```
 
-On macOS, double-click `release.command` in Finder to open Terminal and choose either a real release or a dry-run preview. The launcher runs the release through a Zsh login shell so Node.js, NVM, and GitHub CLI remain available without loading Zsh configuration inside Bash. It keeps the window open after an error so the message can be reviewed.
+On macOS, double-click `commands/release.command` in Finder to open Terminal and choose either a real release or a dry-run preview. The launcher runs the release through a Zsh login shell so Node.js, NVM, and GitHub CLI remain available without loading Zsh configuration inside Bash. It keeps the window open after an error so the message can be reviewed.
 
 The release script validates Git and GitHub CLI state, checks that local `main` is not behind `origin/main`, runs tests and package validation, updates `package.json`, `package-lock.json`, and the tagged-install version in this README, commits all current changes, creates an annotated tag, pushes the branch and tag, and creates a GitHub Release with generated notes.
 

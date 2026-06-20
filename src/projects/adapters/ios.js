@@ -17,6 +17,9 @@ function build(action, project) {
   if (action === 'install') {
     return [createCommand('xcodebuild', [...baseArgs(project), '-resolvePackageDependencies'], { cwd: project.root })];
   }
+  if (action === 'reset') {
+    return [xcodebuild(project, 'clean'), createCommand('xcodebuild', [...baseArgs(project), '-resolvePackageDependencies'], { cwd: project.root })];
+  }
   if (['build', 'test', 'clean'].includes(action)) return [xcodebuild(project, action)];
   if (action === 'check') return [xcodebuild(project, 'analyze'), xcodebuild(project, 'build')];
   if (action === 'run') {

@@ -9,6 +9,7 @@ const DEFAULT_CONFIG = {
   initializeGit: true,
   python: process.platform === 'win32' ? 'python' : 'python3',
   opener: 'vscode',
+  notify: 0,
 };
 
 const CONFIG_KEYS = [...Object.keys(DEFAULT_CONFIG), 'editor'];
@@ -38,6 +39,9 @@ function validateConfig(config) {
   if (config.editor !== undefined && (typeof config.editor !== 'string' || !config.editor.trim())) {
     throw new Error('editor must be a non-empty application or executable name.');
   }
+  if (config.notify !== undefined && (!Number.isInteger(config.notify) || config.notify < 0)) {
+    throw new Error('notify must be a non-negative integer (seconds).');
+  }
   return config;
 }
 
@@ -58,6 +62,13 @@ function parseConfigValue(key, value) {
     if (value === 'true') return true;
     if (value === 'false') return false;
     throw new Error('initializeGit must be true or false.');
+  }
+  if (key === 'notify') {
+    const seconds = Number(value);
+    if (!Number.isInteger(seconds) || seconds < 0) {
+      throw new Error('notify must be a non-negative integer (seconds). Use 0 to disable.');
+    }
+    return seconds;
   }
   return value;
 }

@@ -16,6 +16,8 @@ test('parseArgs reads target and project presets', () => {
     dryRun: false,
     coldBoot: false,
     shutdownAll: false,
+    clear: false,
+    project: undefined,
     target: 'my-app',
     typescript: true,
     packageManager: 'pnpm',

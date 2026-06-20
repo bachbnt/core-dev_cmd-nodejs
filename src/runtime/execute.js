@@ -1,10 +1,21 @@
 // Copyright (c) 2026 bachbnt
 
+const { spawn } = require('child_process');
 const { createHistoryEntry, saveHistory } = require('../commands/history');
 const { recordProject } = require('../projects/recent');
 const { assertExecutables } = require('../runner/check');
 const { formatSequence } = require('../runner/command');
 const { runSequence } = require('../runner/process');
+
+function sendNotification(message) {
+  try {
+    if (process.platform === 'darwin') {
+      spawn('osascript', ['-e', `display notification "${message}" with title "DevCmd"`], { stdio: 'ignore' });
+    } else if (process.platform === 'linux') {
+      spawn('notify-send', ['DevCmd', message], { stdio: 'ignore' });
+    }
+  } catch {}
+}
 
 function describeFailure(result) {
   if (result.signal === 'SIGINT') return 'Command cancelled by user.';
@@ -32,7 +43,16 @@ async function executeCommands(p, pc, commands, metadata, options = {}) {
     return 127;
   }
 
+  const startTime = Date.now();
   const result = await runSequence(commands);
+  const elapsed = Date.now() - startTime;
+  const notifyThreshold = (options.config ?? metadata.config)?.notify;
+  if (notifyThreshold > 0 && elapsed >= notifyThreshold * 1000) {
+    const status = result.ok ? '✔' : '✖';
+    const project = metadata.projectName ? ` — ${metadata.projectName}` : '';
+    sendNotification(`dev ${metadata.command}${project} ${status}`);
+  }
+
   if (!result.ok) {
     p.outro(`${pc.red('✖')} ${describeFailure(result)}`);
     return result.exitCode;

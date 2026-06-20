@@ -69,6 +69,7 @@ async function handleLifecycle(context) {
     projectName: project.name,
     projectPath: project.root,
     projectType: project.type,
+    config,
   }, options);
 }
 

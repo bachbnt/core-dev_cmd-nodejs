@@ -12,6 +12,7 @@ function build(action, project) {
   if (action === 'run') return [command(project, ['run'])];
   if (action === 'test') return [command(project, ['test'])];
   if (action === 'build') return [command(project, ['build', 'apk'])];
+  if (action === 'reset') return [command(project, ['clean']), command(project, ['pub', 'get'])];
   if (action === 'clean') return [command(project, ['clean'])];
   if (action === 'check') return [command(project, ['analyze']), command(project, ['test'])];
   return unsupported(action, project);

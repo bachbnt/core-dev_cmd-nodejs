@@ -1,5 +1,7 @@
 // Copyright (c) 2026 bachbnt
 
+const fs = require('fs');
+const path = require('path');
 const { HISTORY_FILE, frameworkDefinitions } = require('../config');
 const { buildAndroidCommands, buildIOSBootCommands, buildIOSShutdownCommands } = require('../commands/devices');
 const { buildFrameworkCommands, builtInRegistry } = require('../commands/frameworks');
@@ -19,8 +21,20 @@ function rebuildHistoryCommands(entry, registry = builtInRegistry, definitions =
 }
 
 function handleHistory(context) {
-  const { p } = context;
-  const history = readHistory().slice(0, 10);
+  const { p, options } = context;
+
+  if (options.clear) {
+    try { fs.unlinkSync(HISTORY_FILE); } catch {}
+    p.outro('History cleared.');
+    return 0;
+  }
+
+  let history = readHistory().slice(0, 10);
+  if (options.project) {
+    const filter = path.resolve(options.project);
+    history = history.filter((entry) => entry.projectPath === filter);
+  }
+
   if (history.length === 0) {
     p.outro('No successful commands in history yet.');
     return 0;
@@ -34,18 +48,25 @@ function handleHistory(context) {
 }
 
 function handleAgain(context) {
-  const { p, pc, options } = context;
-  const latest = readHistory()[0];
-  if (!latest) throw new Error('No command is available to run again.');
+  const { p, pc, positionals, options } = context;
+  const index = positionals[0] !== undefined ? parseInt(positionals[0], 10) : 1;
+  if (isNaN(index) || index < 1) {
+    throw new Error('Usage: dev again [n] — n must be a positive integer.');
+  }
+  const history = readHistory();
+  const entry = history[index - 1];
+  if (!entry) {
+    throw new Error(`No command at position ${index}. History has ${history.length} entries.`);
+  }
   return executeCommands(
     p,
     pc,
     rebuildHistoryCommands(
-      latest,
+      entry,
       context.recipeRegistry || builtInRegistry,
       context.frameworkDefinitions || frameworkDefinitions
     ),
-    { command: 'again', source: latest.command },
+    { command: 'again', source: entry.command },
     options
   );
 }

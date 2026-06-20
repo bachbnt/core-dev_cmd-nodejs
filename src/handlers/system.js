@@ -1,11 +1,14 @@
 // Copyright (c) 2026 bachbnt
 
-const { CONFIG_FILE, OPENERS_DIR, PROJECTS_FILE, RECIPES_DIR, frameworkDefinitions } = require('../config');
+const { CONFIG_FILE, OPENERS_DIR, PROJECTS_FILE, RECIPES_DIR, VERSION, frameworkDefinitions } = require('../config');
 const { setConfigValue } = require('../config/user');
 const { getExistingProjects } = require('../projects/recent');
 const { checkTools } = require('../runner/check');
 const { loadRecipeFile } = require('../recipes');
 const { loadOpenerFile } = require('../openers');
+const { executeCommands } = require('../runtime/execute');
+
+const PACKAGE_URL = 'https://github.com/bachbnt/dev-cmd/archive/refs/heads/main.tar.gz';
 
 function printConfig(p, config) {
   p.note(JSON.stringify(config, null, 2), `Config: ${CONFIG_FILE}`);
@@ -24,6 +27,14 @@ function handleConfig(context) {
     return 0;
   }
   throw new Error('Usage: dev config [show] or dev config set <key> <value>');
+}
+
+async function handleUpdate(context) {
+  const { p, pc, options } = context;
+  p.log.info(`Current version: ${VERSION}`);
+  return executeCommands(p, pc, [
+    { executable: 'npm', args: ['install', '--global', PACKAGE_URL] },
+  ], { command: 'update' }, options);
 }
 
 function handleDoctor(context) {
@@ -115,5 +126,6 @@ module.exports = {
   handleOpeners,
   handleProjects,
   handleRecipes,
+  handleUpdate,
   printConfig,
 };
