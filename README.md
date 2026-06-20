@@ -69,10 +69,10 @@ When this repository is already available on macOS, double-click `commands/insta
 ### Install a tagged release
 
 <!-- devcmd-release-version:start -->
-For a reproducible released snapshot, install a specific GitHub tag. The tag matching the current package version is `v2.6.2`:
+For a reproducible released snapshot, install a specific GitHub tag. The tag matching the current package version is `v2.6.3`:
 
 ```bash
-npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.6.2.tar.gz
+npm install --global https://github.com/bachbnt/dev-cmd/archive/refs/tags/v2.6.3.tar.gz
 ```
 <!-- devcmd-release-version:end -->
 
@@ -467,6 +467,7 @@ src/handlers/               CLI command handlers
 src/openers/                Built-in and custom project opener engine
 src/projects/               Detection, lifecycle adapters, and recent-project registry
 src/recipes/                Built-in and custom framework recipe engine
+src/mcp/                    MCP server (stdio transport for AI agents)
 src/runtime/                Shared command execution flow
 src/runner/                 Command formatting and process execution
 src/utils/                  Argument parsing and validation
@@ -581,6 +582,31 @@ dev my_backend my-api --set module=example.com/my-api
 ```
 
 Supported scaffold and lifecycle action types are `run`, `mkdir`, `write`, and `copy`. File destinations are restricted to the target project, `copy` sources must remain inside the recipe directory, and existing files are not overwritten. Recipe commands never use `shell: true` or shell command strings. A user recipe with the same name overrides its built-in recipe.
+
+## MCP Server
+
+DevCmd exposes an [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server so AI agents such as Claude Code and Codex can call DevCmd tools directly without spawning shell commands.
+
+### Setup
+
+The server is discovered automatically through `.mcp.json` in the project root. No manual startup is required — Claude Code and compatible agents spawn `dev mcp` on demand and shut it down when the session ends.
+
+### Tools
+
+| Tool | Description |
+| --- | --- |
+| `inspect_project` | Detect the project at a given path and return its type, name, root, and package manager. |
+| `run_lifecycle` | Run a lifecycle action (`install`, `run`, `test`, `build`, `check`, `clean`, `reset`, `open`) on a project and return the captured output. |
+| `list_frameworks` | List all available framework recipes that can be scaffolded. |
+| `get_history` | Return recent successful DevCmd commands from the history file. |
+
+### Running manually
+
+`dev mcp` starts the server on stdio and blocks waiting for JSON-RPC input. This is only useful for debugging; in normal use the agent manages the process lifecycle.
+
+```bash
+dev mcp
+```
 
 ## AI Agent Skills
 

@@ -154,8 +154,14 @@ node "$SCRIPT_DIR/sync-release-version.js" "$NEXT_VERSION" --check
 npm pack --dry-run >/dev/null
 git diff --check
 
+COMMIT_MESSAGE="release: $TAG"
+if [[ "$ASSUME_YES" != true && -t 0 ]]; then
+  read -r -p "Commit message [$COMMIT_MESSAGE]: " custom_message
+  [[ -n "$custom_message" ]] && COMMIT_MESSAGE="$custom_message"
+fi
+
 git add -A
-git commit -m "release: $TAG"
+git commit -m "$COMMIT_MESSAGE"
 git tag -a "$TAG" -m "DevCmd $TAG"
 git push origin "$BRANCH"
 git push origin "$TAG"

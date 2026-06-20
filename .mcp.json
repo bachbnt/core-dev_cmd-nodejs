@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "devcmd": {
+      "command": "dev",
+      "args": ["mcp"]
+    }
+  }
+}

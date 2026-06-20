@@ -4,6 +4,7 @@ const { BRAND, PACKAGE_MANAGERS, VERSION, frameworkDefinitions } = require('./co
 const { loadConfig } = require('./config/user');
 const { getCompletion } = require('./commands/completion');
 const { handleClone } = require('./handlers/clone');
+const { handleMcp } = require('./handlers/mcp');
 const { handleDeviceCommand, handleDeviceList } = require('./handlers/devices');
 const { handleAgain, handleHistory, rebuildHistoryCommands } = require('./handlers/history');
 const { handleInspect, handleLifecycle } = require('./handlers/lifecycle');
@@ -49,6 +50,7 @@ function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   console.log(`\n${pc.bold('Tools:')}`);
   console.log(`  ${pc.magenta('clone'.padEnd(16))} ${pc.dim('Clone a repository and install dependencies')}`);
   console.log(`  ${pc.magenta('update'.padEnd(16))} ${pc.dim('Update DevCmd to the latest version')}`);
+  console.log(`  ${pc.magenta('mcp'.padEnd(16))} ${pc.dim('Start the DevCmd MCP server (stdio transport)')}`);
   console.log(`\n${pc.bold('Openers:')}`);
   for (const opener of openerRegistry?.values() || []) {
     const aliases = opener.aliases?.length ? ` (${opener.aliases.join(', ')})` : '';
@@ -102,6 +104,7 @@ const COMMAND_HANDLERS = new Map([
   ['init', handleInit],
   ['update', handleUpdate],
   ['clone', handleClone],
+  ['mcp', handleMcp],
   ['devices', handleDeviceList],
   ['android', handleDeviceCommand],
   ['ios', handleDeviceCommand],
@@ -165,7 +168,7 @@ async function main(argv) {
   try {
     validateCommandFlags(command, options, definitions);
     const config = loadConfig();
-    p.intro(`${pc.bgCyan(pc.black(` ${BRAND} `))} ${pc.bold(command)}`);
+    if (command !== 'mcp') p.intro(`${pc.bgCyan(pc.black(` ${BRAND} `))} ${pc.bold(command)}`);
     return await dispatch({
       p,
       pc,
