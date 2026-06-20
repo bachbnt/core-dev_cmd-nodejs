@@ -30,6 +30,7 @@ function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   console.log(pc.bold('Usage:'));
   console.log('  dev <command> [target] [options]\n');
   console.log(pc.bold('Frameworks:'));
+  console.log(`  ${pc.green('init'.padEnd(20))} ${pc.dim('Create a new project interactively')}`);
   for (const [name, definition] of Object.entries(definitions)) {
     console.log(`  ${pc.green(name.padEnd(20))} ${pc.dim(definition.description)}`);
   }
@@ -42,11 +43,11 @@ function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   console.log(`  ${pc.magenta('projects'.padEnd(16))} ${pc.dim('Show recently used projects')}`);
   console.log(`  ${pc.magenta('recipes'.padEnd(16))} ${pc.dim('List or validate framework recipes')}`);
   console.log(`  ${pc.magenta('openers'.padEnd(16))} ${pc.dim('List or validate project openers')}`);
-  console.log(`  ${pc.magenta('init'.padEnd(16))} ${pc.dim('Create a new project interactively')}`);
-  console.log(`  ${pc.magenta('clone'.padEnd(16))} ${pc.dim('Clone a repository and install dependencies')}`);
-  console.log(`  ${pc.magenta('update'.padEnd(16))} ${pc.dim('Update DevCmd to the latest version')}`);
   console.log(`  ${pc.magenta('config'.padEnd(16))} ${pc.dim('Show or update DevCmd defaults')}`);
   console.log(`  ${pc.magenta('completion'.padEnd(16))} ${pc.dim('Generate bash or zsh completion')}`);
+  console.log(`\n${pc.bold('Tools:')}`);
+  console.log(`  ${pc.magenta('clone'.padEnd(16))} ${pc.dim('Clone a repository and install dependencies')}`);
+  console.log(`  ${pc.magenta('update'.padEnd(16))} ${pc.dim('Update DevCmd to the latest version')}`);
   console.log(`\n${pc.bold('Openers:')}`);
   for (const opener of openerRegistry?.values() || []) {
     const aliases = opener.aliases?.length ? ` (${opener.aliases.join(', ')})` : '';
@@ -60,8 +61,8 @@ function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   console.log(`  ${pc.blue('android'.padEnd(16))} ${pc.dim('Boot Android emulator')}`);
   console.log(`  ${pc.blue('ios'.padEnd(16))} ${pc.dim('Boot or manage iOS simulators')}`);
   console.log(`\n${pc.bold('History:')}`);
-  console.log(`  ${pc.cyan('history'.padEnd(16))} ${pc.dim('Show recent successful commands')}`);
-  console.log(`  ${pc.cyan('again'.padEnd(16))} ${pc.dim('Run the latest successful command again')}`);
+  console.log(`  ${pc.cyan('history'.padEnd(16))} ${pc.dim('Show recent successful commands [--clear] [--project <path>]')}`);
+  console.log(`  ${pc.cyan('again'.padEnd(16))} ${pc.dim('Run a recent command again [n]')}`);
   console.log(`\n${pc.bold('Options:')}`);
   const printOption = (flags, description) => {
     console.log(`  ${flags.padEnd(31)} ${pc.dim(description)}`);
@@ -82,6 +83,8 @@ function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   printOption('--list', 'List available openers');
   printOption('--cold-boot', 'Cold boot Android emulator');
   printOption('--shutdown-all', 'Shutdown all iOS simulators');
+  printOption('--clear', 'Clear history (history only)');
+  printOption('--project <path>', 'Filter history by project path (history only)');
   console.log('');
 }
 
