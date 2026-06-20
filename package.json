@@ -11,7 +11,8 @@
     "src"
   ],
   "scripts": {
-    "setup": "./scripts/setup-dev.sh",
+    "install-local": "./scripts/install-local.sh",
+    "install-remote": "./scripts/install-remote.sh",
     "release": "./scripts/release.sh",
     "test": "node --test"
   },

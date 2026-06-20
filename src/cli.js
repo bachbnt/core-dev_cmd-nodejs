@@ -5,7 +5,8 @@ const { loadConfig } = require('./config/user');
 const { getCompletion } = require('./commands/completion');
 const { handleDeviceCommand, handleDeviceList } = require('./handlers/devices');
 const { handleAgain, handleHistory, rebuildHistoryCommands } = require('./handlers/history');
-const { LIFECYCLE_COMMANDS, handleInspect, handleLifecycle } = require('./handlers/lifecycle');
+const { handleInspect, handleLifecycle } = require('./handlers/lifecycle');
+const { LIFECYCLE_COMMANDS } = require('./constants');
 const { applyConfigDefaults, handleScaffold } = require('./handlers/scaffold');
 const {
   handleConfig,
@@ -79,21 +80,27 @@ function printHelp(pc, definitions = frameworkDefinitions, openerRegistry) {
   console.log('');
 }
 
+const COMMAND_HANDLERS = new Map([
+  ['config', handleConfig],
+  ['doctor', handleDoctor],
+  ['projects', handleProjects],
+  ['recipes', handleRecipes],
+  ['openers', handleOpeners],
+  ['inspect', handleInspect],
+  ['info', handleInfo],
+  ['history', handleHistory],
+  ['again', handleAgain],
+  ['devices', handleDeviceList],
+  ['android', handleDeviceCommand],
+  ['ios', handleDeviceCommand],
+]);
+for (const cmd of LIFECYCLE_COMMANDS) COMMAND_HANDLERS.set(cmd, handleLifecycle);
+
 async function dispatch(context) {
   const { command } = context;
   const definitions = context.frameworkDefinitions || frameworkDefinitions;
-  if (command === 'config') return handleConfig(context);
-  if (command === 'doctor') return handleDoctor(context);
-  if (command === 'projects') return handleProjects(context);
-  if (command === 'recipes') return handleRecipes(context);
-  if (command === 'openers') return handleOpeners(context);
-  if (command === 'inspect') return handleInspect(context);
-  if (LIFECYCLE_COMMANDS.includes(command)) return handleLifecycle(context);
-  if (command === 'info') return handleInfo(context);
-  if (command === 'history') return handleHistory(context);
-  if (command === 'again') return handleAgain(context);
-  if (command === 'devices') return handleDeviceList(context);
-  if (command === 'android' || command === 'ios') return handleDeviceCommand(context);
+  const handler = COMMAND_HANDLERS.get(command);
+  if (handler) return handler(context);
   if (definitions[command]) return handleScaffold(context);
   throw new Error(`Unsupported command: ${command}. Run dev help to see available commands.`);
 }

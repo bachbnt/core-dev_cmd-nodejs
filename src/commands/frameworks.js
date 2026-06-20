@@ -2,11 +2,9 @@
 
 const {
   buildRecipeCommands,
+  builtInRegistry,
   getRecipeRequirements,
-  loadRecipeRegistry,
 } = require('../recipes');
-
-const builtInRegistry = loadRecipeRegistry({ includeUser: false });
 
 function getRecipe(command, registry = builtInRegistry) {
   const recipe = registry.get(command);

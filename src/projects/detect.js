@@ -2,16 +2,18 @@
 
 const fs = require('fs');
 const path = require('path');
-const { loadRecipeRegistry } = require('../recipes');
-
-const builtInRegistry = loadRecipeRegistry({ includeUser: false });
+const { builtInRegistry } = require('../recipes');
 
 function exists(root, name, fsImpl = fs) {
   return fsImpl.existsSync(path.join(root, name));
 }
 
 function readJson(file, fsImpl = fs) {
-  return JSON.parse(fsImpl.readFileSync(file, 'utf8'));
+  try {
+    return JSON.parse(fsImpl.readFileSync(file, 'utf8'));
+  } catch (error) {
+    throw new Error(`Invalid JSON in ${file}: ${error.message}`);
+  }
 }
 
 function detectPackageManager(root, packageJson = {}, fsImpl = fs) {

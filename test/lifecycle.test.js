@@ -113,7 +113,7 @@ test('Flutter and Android check use native quality tasks', () => {
 
 test('clean falls back to the internal safe cleaner', () => {
   const command = buildLifecycleCommands('clean', nodeProject)[0];
-  assert.equal(command.executable, 'node');
+  assert.equal(command.executable, process.execPath);
   assert.match(command.args[0], /clean-project\.js$/);
   assert.deepEqual(command.args.slice(1), ['/tmp/site', 'next']);
 });

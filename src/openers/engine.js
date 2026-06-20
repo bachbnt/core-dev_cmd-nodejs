@@ -4,12 +4,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { findXcodeContainer } = require('../projects/detect');
 const { createCommand } = require('../runner/command');
+const { interpolate: _interpolate } = require('../utils/interpolate');
 
 function interpolate(value, context) {
-  return value.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (match, key) => {
-    if (context[key] === undefined) throw new Error(`Unknown opener placeholder: ${key}`);
-    return String(context[key]);
-  });
+  return _interpolate(value, context, 'opener placeholder');
 }
 
 function resolveTarget(opener, project, options = {}) {

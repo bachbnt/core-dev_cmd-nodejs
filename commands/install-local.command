@@ -4,16 +4,15 @@
 set -u
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
-cd "$SCRIPT_DIR" || exit 1
+PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
 clear
-printf 'DevCmd Latest\n'
-printf '=============\n\n'
-printf 'This loads the newest available DevCmd source.\n'
-printf 'Unpublished local changes are linked; otherwise GitHub main is installed.\n\n'
+printf 'DevCmd Install Local\n'
+printf '====================\n\n'
+printf 'This installs DevCmd from the local source.\n\n'
 
-/bin/zsh -lic 'cd -- "$1" && shift && exec ./scripts/install-latest.sh "$@"' \
-  devcmd-latest "$SCRIPT_DIR" "$@"
+/bin/zsh -lic 'cd -- "$1" && shift && exec ./scripts/install-local.sh "$@"' \
+  devcmd-local "$PROJECT_DIR" "$@"
 exit_code=$?
 
 printf '\n'

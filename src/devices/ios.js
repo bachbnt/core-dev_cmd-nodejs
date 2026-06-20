@@ -6,7 +6,7 @@ function parseRuntime(runtime) {
   return runtime
     .replace(/^com\.apple\.CoreSimulator\.SimRuntime\./, '')
     .replace(/-/g, ' ')
-    .replace(/(\d) (\d)/g, '$1.$2');
+    .replace(/(?<=\d) (?=\d)/g, '.');
 }
 
 function parseIOSDevices(output) {

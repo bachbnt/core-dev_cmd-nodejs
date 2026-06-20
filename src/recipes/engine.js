@@ -2,6 +2,7 @@
 
 const path = require('path');
 const { createCommand } = require('../runner/command');
+const { interpolate: _interpolate } = require('../utils/interpolate');
 
 const ACTION_RUNNER = path.join(__dirname, 'action-runner.js');
 const PYTHON_GENERATOR = path.join(__dirname, '..', 'generators', 'python-project.js');
@@ -12,10 +13,7 @@ function conditionMatches(condition, context) {
 }
 
 function interpolate(value, context) {
-  return value.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (match, key) => {
-    if (context[key] === undefined) throw new Error(`Unknown recipe placeholder: ${key}`);
-    return String(context[key]);
-  });
+  return _interpolate(value, context, 'recipe placeholder');
 }
 
 function resolveValue(spec, context) {

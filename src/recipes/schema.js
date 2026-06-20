@@ -1,15 +1,13 @@
 // Copyright (c) 2026 bachbnt
 
+const { LIFECYCLE_COMMANDS, SYSTEM_COMMANDS, DEVICE_COMMANDS } = require('../constants');
+
 const RECIPE_NAME = /^[a-z][a-z0-9_]*$/;
 const INPUT_NAME = /^[A-Za-z][A-Za-z0-9_]*$/;
 const ACTION_TYPES = new Set(['run', 'mkdir', 'write', 'copy']);
 const CAPABILITIES = new Set(['language', 'packageManager', 'git', 'eslint', 'noInstall', 'python']);
 const PACKAGE_MANAGERS = new Set(['npm', 'pnpm', 'yarn']);
-const RESERVED_RECIPES = new Set([
-  'doctor', 'inspect', 'install', 'run', 'test', 'build', 'clean', 'check', 'open',
-  'devices', 'android', 'ios', 'history', 'again', 'projects', 'recipes', 'openers', 'config', 'completion',
-  'help', 'info',
-]);
+const RESERVED_RECIPES = new Set([...LIFECYCLE_COMMANDS, ...SYSTEM_COMMANDS, ...DEVICE_COMMANDS, 'help']);
 const RESERVED_INPUTS = new Set([
   'target', 'packageManager', 'typescript', 'git', 'eslint', 'vueDefault', 'noInstall',
   'python', 'venvDirectory', 'projectPython', 'pythonGenerator',
@@ -143,7 +141,7 @@ function pathIsUnsafe(value) {
 
 function validateLifecycle(lifecycle, recipeName) {
   assertPlainObject(lifecycle, `Recipe ${recipeName} lifecycle`);
-  const actionNames = new Set(['install', 'run', 'test', 'build', 'check', 'clean', 'open']);
+  const actionNames = new Set(LIFECYCLE_COMMANDS);
   if (lifecycle.adapter !== undefined) {
     if (Object.keys(lifecycle).length !== 1 || !RECIPE_NAME.test(lifecycle.adapter)) {
       throw new Error(`Recipe ${recipeName} lifecycle adapter must be a valid adapter name.`);

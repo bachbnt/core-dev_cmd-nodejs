@@ -83,7 +83,7 @@ fi
 
 if [[ "$MODE" == "local" ]]; then
   printf 'Loading the current local DevCmd source...\n'
-  "$PROJECT_DIR/scripts/setup-dev.sh"
+  "$PROJECT_DIR/scripts/install-local.sh"
 else
   printf 'Installing the latest committed DevCmd source from GitHub...\n'
   npm install --global "$PACKAGE_URL"

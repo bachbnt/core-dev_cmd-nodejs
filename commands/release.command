@@ -4,11 +4,11 @@
 set -u
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
-cd "$SCRIPT_DIR" || exit 1
+PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
 run_release() {
   /bin/zsh -lic 'cd -- "$1" && shift && exec ./scripts/release.sh "$@"' \
-    devcmd-release "$SCRIPT_DIR" "$@"
+    devcmd-release "$PROJECT_DIR" "$@"
 }
 
 clear

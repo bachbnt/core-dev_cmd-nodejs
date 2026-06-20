@@ -5,7 +5,7 @@ const { createCommand } = require('../../runner/command');
 
 function internalCleaner(project) {
   const cleaner = path.join(__dirname, '..', '..', 'generators', 'clean-project.js');
-  return [createCommand('node', [cleaner, project.root, project.type])];
+  return [createCommand(process.execPath, [cleaner, project.root, project.type])];
 }
 
 function unsupported(action, project) {

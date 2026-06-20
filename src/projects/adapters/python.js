@@ -14,11 +14,6 @@ function venvPython(project) {
   return path.join(project.root, relative);
 }
 
-function getPython(project, config) {
-  const executable = venvPython(project);
-  return fs.existsSync(executable) ? executable : config.python;
-}
-
 function pyprojectContent(project) {
   try {
     return fs.readFileSync(path.join(project.root, 'pyproject.toml'), 'utf8').toLowerCase();
@@ -29,15 +24,16 @@ function pyprojectContent(project) {
 
 function build(action, project, context) {
   const config = context.config;
-  const python = getPython(project, config);
+  const venvExecutable = venvPython(project);
+  const venvExists = fs.existsSync(venvExecutable);
+  const python = venvExists ? venvExecutable : config.python;
 
   if (action === 'install') {
-    const executable = venvPython(project);
     const commands = [];
-    if (!fs.existsSync(executable)) {
+    if (!venvExists) {
       commands.push(createCommand(config.python, ['-m', 'venv', '.venv'], { cwd: project.root }));
     }
-    commands.push(createCommand(executable, ['-m', 'pip', 'install', '-e', '.[dev]'], { cwd: project.root }));
+    commands.push(createCommand(venvExecutable, ['-m', 'pip', 'install', '-e', '.[dev]'], { cwd: project.root }));
     return commands;
   }
   if (action === 'run' && project.type === 'django') {
@@ -69,7 +65,6 @@ function build(action, project, context) {
 
 module.exports = {
   build,
-  getPython,
   id: 'python',
   matches: (project) => TYPES.includes(project.type),
   venvPython,

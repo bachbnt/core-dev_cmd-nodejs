@@ -16,7 +16,10 @@ const {
 } = require('./loader');
 const { validateRecipe } = require('./schema');
 
+const builtInRegistry = loadRecipeRegistry({ includeUser: false });
+
 module.exports = {
+  builtInRegistry,
   buildRecipeCommands,
   buildRecipeActions,
   buildRecipeLifecycleCommands,

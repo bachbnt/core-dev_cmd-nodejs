@@ -110,6 +110,8 @@ function validateCommandFlags(command, options, definitions = frameworkDefinitio
     options.packageManager !== undefined ||
     options.git !== undefined ||
     options.eslint !== undefined ||
+    options.noInstall ||
+    options.python !== undefined ||
     Object.keys(options.values || {}).length > 0;
   if (hasPreset && !definitions[command]) {
     throw new Error('Project preset options can only be used with framework commands.');

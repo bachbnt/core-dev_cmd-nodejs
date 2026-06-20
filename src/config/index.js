@@ -3,7 +3,7 @@
 const os = require('os');
 const path = require('path');
 const { version } = require('../../package.json');
-const { getRecipeDefinitions, loadRecipeRegistry } = require('../recipes');
+const { builtInRegistry, getRecipeDefinitions } = require('../recipes');
 
 const BRAND = 'DevCmd';
 const CONFIG_FILE = path.join(os.homedir(), '.devcmd', 'config.json');
@@ -17,7 +17,7 @@ const DEFAULT_DEVICES = {
   ios: 'iPhone 17 Pro',
 };
 
-const frameworkDefinitions = getRecipeDefinitions(loadRecipeRegistry({ includeUser: false }));
+const frameworkDefinitions = getRecipeDefinitions(builtInRegistry);
 
 module.exports = {
   BRAND,

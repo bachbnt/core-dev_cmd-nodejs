@@ -6,8 +6,7 @@ const { detectProject } = require('../projects/detect');
 const { getExistingProjects } = require('../projects/recent');
 const { executeCommands } = require('../runtime/execute');
 const { builtInOpenerRegistry, resolveOpener } = require('../openers');
-
-const LIFECYCLE_COMMANDS = ['install', 'run', 'test', 'build', 'check', 'clean', 'open'];
+const { LIFECYCLE_COMMANDS } = require('../constants');
 
 function resolveLifecycleTarget(
   command,

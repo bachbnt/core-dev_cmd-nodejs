@@ -2,8 +2,7 @@
 
 const { buildLifecycleCommands, buildOpenCommands } = require('./lifecycle');
 const { formatSequence } = require('../runner/command');
-
-const INSPECT_ACTIONS = ['install', 'run', 'test', 'build', 'check', 'clean', 'open'];
+const { LIFECYCLE_COMMANDS } = require('../constants');
 
 function inspectAction(action, project, config, openerRegistry) {
   try {
@@ -29,12 +28,12 @@ function inspectProject(project, config, openerRegistry) {
     packageManager: project.packageManager,
     xcode: project.xcode,
     recipeSource: project.recipe?.source,
-    actions: INSPECT_ACTIONS.map((action) => inspectAction(action, project, config, openerRegistry)),
+    actions: LIFECYCLE_COMMANDS.map((action) => inspectAction(action, project, config, openerRegistry)),
   };
 }
 
 module.exports = {
-  INSPECT_ACTIONS,
+  INSPECT_ACTIONS: LIFECYCLE_COMMANDS,
   inspectAction,
   inspectProject,
 };
